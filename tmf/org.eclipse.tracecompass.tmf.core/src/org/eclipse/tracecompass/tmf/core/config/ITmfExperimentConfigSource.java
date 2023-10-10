@@ -1,0 +1,26 @@
+/*******************************************************************************
+ * Copyright (c) 2023 Ericsson
+ *
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License 2.0 which
+ * accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *******************************************************************************/
+
+package org.eclipse.tracecompass.tmf.core.config;
+
+import org.eclipse.tracecompass.tmf.core.exceptions.TmfConfigurationException;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+
+/**
+ * Interface to implement for applying a configuration to an experiment instance.
+ *
+ * @author Bernd Hufmann
+ * @since 9.2
+ */
+public interface ITmfExperimentConfigSource extends ITmfConfigurationSource {
+    ITmfConfiguration applyConfiguration(String configId, ITmfTrace trace) throws TmfConfigurationException;
+    void removeConfiguration(String configId, ITmfTrace trace) throws TmfConfigurationException;
+}

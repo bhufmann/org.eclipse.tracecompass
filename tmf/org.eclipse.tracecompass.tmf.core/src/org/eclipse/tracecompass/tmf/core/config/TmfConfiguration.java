@@ -10,11 +10,14 @@
  *******************************************************************************/
 package org.eclipse.tracecompass.tmf.core.config;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
 
 /**
  * Implementation of {@link ITmfConfiguration} interface. It provides a builder
@@ -30,6 +33,7 @@ public class TmfConfiguration implements ITmfConfiguration {
     private final String fDescription;
     private final String fSourceTypeId;
     private final Map<String, Object> fParameters;
+    private final List<IDataProviderDescriptor> fDataProviderDescriptors;
 
     /**
      * Constructor
@@ -43,6 +47,7 @@ public class TmfConfiguration implements ITmfConfiguration {
         fDescription = builder.fDescription;
         fSourceTypeId = Objects.requireNonNull(builder.fSourceTypeId);
         fParameters = builder.fParameters;
+        fDataProviderDescriptors = builder.fDataProviderDescriptors;
     }
 
     @Override
@@ -71,6 +76,11 @@ public class TmfConfiguration implements ITmfConfiguration {
     }
 
     @Override
+    public List<IDataProviderDescriptor> getDataProviderDescriptors() {
+        return fDataProviderDescriptors;
+    }
+
+    @Override
     @SuppressWarnings("nls")
     public String toString() {
         return new StringBuilder(getClass().getSimpleName())
@@ -80,6 +90,7 @@ public class TmfConfiguration implements ITmfConfiguration {
             .append(", fType=").append(getSourceTypeId())
             .append(", fId=").append(getId())
             .append(", fParameters=").append(getParameters())
+            .append(", fParameters=").append(getDataProviderDescriptors())
             .append("]").toString();
     }
 
@@ -90,12 +101,13 @@ public class TmfConfiguration implements ITmfConfiguration {
         }
         TmfConfiguration other = (TmfConfiguration) arg0;
         return Objects.equals(fName, other.fName) && Objects.equals(fId, other.fId)
-                && Objects.equals(fSourceTypeId, other.fSourceTypeId) && Objects.equals(fDescription, other.fDescription) && Objects.equals(fParameters, other.fParameters);
+                && Objects.equals(fSourceTypeId, other.fSourceTypeId) && Objects.equals(fDescription, other.fDescription)
+                && Objects.equals(fParameters, other.fParameters) && Objects.equals(fDataProviderDescriptors, other.fDataProviderDescriptors);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fName, fId, fSourceTypeId, fDescription, fParameters);
+        return Objects.hash(fName, fId, fSourceTypeId, fDescription, fParameters, fDataProviderDescriptors);
     }
 
     /**
@@ -108,6 +120,7 @@ public class TmfConfiguration implements ITmfConfiguration {
         private String fDescription = ""; //$NON-NLS-1$
         private String fSourceTypeId = ""; //$NON-NLS-1$
         private Map<String, Object> fParameters = new HashMap<>();
+        private List<IDataProviderDescriptor> fDataProviderDescriptors = Collections.emptyList();
 
         /**
          * Constructor
@@ -175,6 +188,17 @@ public class TmfConfiguration implements ITmfConfiguration {
          */
         public Builder setParameters(Map<String, Object> parameters) {
             fParameters = parameters;
+            return this;
+        }
+
+        /**
+         * Sets optional data provider descriptors created by this configuration.
+         * @param descriptors
+         *            The descriptors to set
+         * @return the builder instance
+         */
+        public Builder setDataProviderDescriptors(List<IDataProviderDescriptor> descriptors) {
+            fDataProviderDescriptors = descriptors;
             return this;
         }
 

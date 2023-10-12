@@ -34,6 +34,7 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfTraceClosedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
@@ -248,5 +249,43 @@ public class DataProviderManager {
      */
     public <T extends ITmfTreeDataProvider<? extends ITmfTreeDataModel>> boolean removeDataProvider(ITmfTrace trace, T provider) {
         return fInstances.remove(trace, provider);
+    }
+
+    /**
+     * Remove a data provider from the instances by ID. This method will not
+     * dispose of the data provider. It is the responsibility of the caller to
+     * dispose of it if needed.
+     *
+     * @param trace
+     *            The trace for which to remove the data provider
+     * @param id
+     *            The The ID of the data provider to remove
+     * @return {@code true} if any elements were removed
+     * @since 9.2
+     */
+    public boolean removeDataProvider(ITmfTrace trace, String id) {
+        return fInstances.get(trace).removeIf(p -> p.getId().equals(id));
+    }
+
+    /**
+     * @return a collection of existing data provider factories
+     * @since 9.2
+     */
+    public synchronized Collection<IDataProviderFactory> getFactories() {
+        return ImmutableList.copyOf(fDataProviderFactories.values());
+    }
+
+    /**
+     * @param id
+     *            The id of the data provider factory or a data provider ID of
+     *            form factoryId:secondaryId
+     *
+     * @return the data provider factory for a given Id.
+     * @since 9.2
+     */
+    public synchronized @Nullable IDataProviderFactory getFactory(String id) {
+        String[] ids = id.split(DataProviderConstants.ID_SEPARATOR, 2);
+        String factoryId = ids.length > 1 ? ids[0] : id;
+        return fDataProviderFactories.get(factoryId);
     }
 }

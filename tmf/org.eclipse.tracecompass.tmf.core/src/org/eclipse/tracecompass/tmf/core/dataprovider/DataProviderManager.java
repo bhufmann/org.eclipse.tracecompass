@@ -277,7 +277,7 @@ public class DataProviderManager {
 
     /**
      * @param id
-     *            The id of the data provider factory or a data provider ID of
+     *            The ID of the data provider factory or a data provider ID of
      *            form factoryId:secondaryId
      *
      * @return the data provider factory for a given Id.
@@ -287,5 +287,35 @@ public class DataProviderManager {
         String[] ids = id.split(DataProviderConstants.ID_SEPARATOR, 2);
         String factoryId = ids.length > 1 ? ids[0] : id;
         return fDataProviderFactories.get(factoryId);
+    }
+
+    /**
+     * Add a new data provider factory.
+     *
+     * @param id
+     *            The data provider factory ID
+     * @param factory
+     *            The data provider factory implementation
+     *
+     * @since 9.2
+     */
+    public synchronized void addDataProviderFactory(String id, IDataProviderFactory factory) {
+        fDataProviderFactories.put(id, factory);
+
+    }
+
+    /**
+     * Remove a data provider factory.
+     *
+     * @param id
+     *            The ID of the data provider factory or a data provider ID of
+     *            form factoryId:secondaryId
+     *
+     * @since 9.2
+     */
+    public synchronized void removeDataProviderFactory(String id) {
+        String[] ids = id.split(DataProviderConstants.ID_SEPARATOR, 2);
+        String factoryId = ids.length > 1 ? ids[0] : id;
+        fDataProviderFactories.remove(factoryId);
     }
 }

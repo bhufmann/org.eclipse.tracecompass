@@ -326,6 +326,7 @@ public class HT_IO {
         closeFile();
 
         File historyTreeFile = fConfig.getStateFile();
+        System.out.println(historyTreeFile);
         if (!historyTreeFile.delete()) {
             /* We didn't succeed in deleting the file */
             Activator.getDefault().logError("Failed to delete" + historyTreeFile.getName()); //$NON-NLS-1$

@@ -57,4 +57,10 @@ public interface ITmfTreeDataProvider<T extends ITmfTreeDataModel> {
      */
     public default void dispose() {
     }
+
+    /**
+     * @since 9.2
+     */
+    default void clearPersistentData() {
+    }
 }

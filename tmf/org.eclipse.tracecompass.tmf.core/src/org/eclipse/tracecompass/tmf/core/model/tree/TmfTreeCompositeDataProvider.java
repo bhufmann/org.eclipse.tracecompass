@@ -183,8 +183,9 @@ public class TmfTreeCompositeDataProvider<M extends ITmfTreeDataModel, P extends
      * Get the list of encapsulated providers
      *
      * @return the list of encapsulated providers
+     * @since 9.2
      */
-    protected List<P> getProviders() {
+    public List<P> getProviders() {
         return fProviders;
     }
 

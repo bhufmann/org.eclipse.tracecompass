@@ -307,4 +307,11 @@ public class SegmentStoreStatisticsDataProvider extends AbstractTmfTraceDataProv
     public void setLabelMapper(UnaryOperator<String> mapper) {
         fAspects.setLabelMapper(mapper);
     }
+
+    @Override
+    public void clearPersistentData() {
+        if (fModule != null) {
+            fModule.clearPersistentData();
+        }
+    }
 }

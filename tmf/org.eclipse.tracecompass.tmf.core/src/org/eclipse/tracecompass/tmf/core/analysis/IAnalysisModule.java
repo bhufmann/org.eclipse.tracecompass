@@ -295,4 +295,11 @@ public interface IAnalysisModule extends ITmfComponent, IAnalysisRequirementProv
      *            The of the parameter that changed
      */
     void notifyParameterChanged(@NonNull String name);
+
+    /**
+     * @since 9.2
+     */
+    default void clearPersistentData() {
+        cancel();
+    }
 }

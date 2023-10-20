@@ -896,4 +896,16 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
         }
         return properties;
     }
+
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    public void clearPersistentData() {
+        super.clearPersistentData();
+        if (fStateSystem != null) {
+            fStateSystem.removeFiles();
+        }
+    }
 }

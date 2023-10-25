@@ -552,4 +552,11 @@ public interface ITmfTrace extends ITmfEventProvider {
     public default boolean isIndexing() {
         return false;
     }
+
+    /**
+     * @since 9.2
+     */
+    public default void refreshAnalysisModules() {
+        // nothing to do
+    }
 }

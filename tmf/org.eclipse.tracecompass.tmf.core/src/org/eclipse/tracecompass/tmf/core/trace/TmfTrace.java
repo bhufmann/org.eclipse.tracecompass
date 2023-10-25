@@ -21,10 +21,12 @@ package org.eclipse.tracecompass.tmf.core.trace;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdaptable;
@@ -311,6 +313,43 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
             }
         }
         return status;
+    }
+
+    @Override
+    public void refreshAnalysisModules() {
+        Map<String, IAnalysisModule> newAnalysisModules = new HashMap<>();
+        MultiStatus status = new MultiStatus(Activator.PLUGIN_ID, IStatus.OK, null, null);
+        Map<String, IAnalysisModuleHelper> modules = TmfAnalysisManager.getAnalysisModules(this.getClass());
+        for (IAnalysisModuleHelper helper : modules.values()) {
+            try {
+                IAnalysisModule module = helper.newModule(this);
+                if (module == null) {
+                    continue;
+                }
+                newAnalysisModules.put(module.getId(), module);
+            } catch (TmfAnalysisException e) {
+                status.add(new Status(IStatus.WARNING, Activator.PLUGIN_ID, e.getMessage()));
+            }
+        }
+
+        Map<String, IAnalysisModule> oldAnalysisModules = new HashMap<>(fAnalysisModules);
+        Set<String> keys = new HashSet<>();
+        keys.addAll(newAnalysisModules.keySet());
+        for (String key : keys) {
+            if (!oldAnalysisModules.containsKey(key)) {
+                IAnalysisModule module = newAnalysisModules.get(key);
+                fAnalysisModules.put(key, module);
+                newAnalysisModules.remove(key);
+            } else {
+                oldAnalysisModules.remove(key);
+            }
+        }
+        for (String key : oldAnalysisModules.keySet()) {
+            IAnalysisModule analysisModule = fAnalysisModules.remove(key);
+            if (analysisModule != null) {
+                analysisModule.dispose();
+            }
+        }
     }
 
     @Override

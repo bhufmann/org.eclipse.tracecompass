@@ -14,6 +14,9 @@ package org.eclipse.tracecompass.tmf.core.model;
 import java.util.Objects;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSourceType;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderCapabilities;
 import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
 
 /**
@@ -31,7 +34,9 @@ public class DataProviderDescriptor implements IDataProviderDescriptor {
     private final String fName;
     private final String fDescription;
     private final ProviderType fType;
-
+    private @Nullable final IDataProviderCapabilities fCapabilities;
+    private @Nullable final ITmfConfigurationSourceType fTimeGraphCreatorType;
+    private @Nullable final ITmfConfiguration fTimeGraphCreatorConfiguration;
     /**
      * Constructor
      *
@@ -43,6 +48,9 @@ public class DataProviderDescriptor implements IDataProviderDescriptor {
         fName = builder.fName;
         fDescription = builder.fDescription;
         fType = Objects.requireNonNull(builder.fType);
+        fCapabilities = builder.fCapabilities;
+        fTimeGraphCreatorType = builder.fTimeGraphCreatorType;
+        fTimeGraphCreatorConfiguration = builder.fTimeGraphCreatorConfiguration;
     }
 
     @Override
@@ -66,11 +74,27 @@ public class DataProviderDescriptor implements IDataProviderDescriptor {
     }
 
     @Override
+    public @Nullable IDataProviderCapabilities getCapabilities() {
+        return fCapabilities;
+    }
+
+    @Override
+    public @Nullable ITmfConfigurationSourceType getTimeGraphCreatorType() {
+        return fTimeGraphCreatorType;
+    }
+
+    @Override
+    public @Nullable ITmfConfiguration getTimeGraphCreatorConfiguration() {
+        return fTimeGraphCreatorConfiguration;
+    }
+
+    @Override
     @SuppressWarnings("nls")
     public String toString() {
         return getClass().getSimpleName() + " [fName=" + getName()
                 + ", fDescription=" + getDescription() + ", fType=" + getType()
                 +  ", fId=" + getId()
+                +  "fCapabilities=" + getCapabilities()
                 + "]";
     }
 
@@ -81,12 +105,15 @@ public class DataProviderDescriptor implements IDataProviderDescriptor {
         }
         DataProviderDescriptor other = (DataProviderDescriptor) arg0;
         return Objects.equals(fName, other.fName) && Objects.equals(fId, other.fId)
-                && Objects.equals(fType, other.fType) && Objects.equals(fDescription, other.fDescription);
+                && Objects.equals(fType, other.fType) && Objects.equals(fDescription, other.fDescription)
+                && Objects.equals(fCapabilities, other.getCapabilities()) &&
+                Objects.equals(fTimeGraphCreatorType, other.getTimeGraphCreatorType()) &&
+                Objects.equals(fTimeGraphCreatorConfiguration, other.getTimeGraphCreatorConfiguration());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fName, fId, fType, fDescription);
+        return Objects.hash(fName, fId, fType, fDescription, fCapabilities, fTimeGraphCreatorType, fTimeGraphCreatorConfiguration);
     }
 
     /**
@@ -96,7 +123,10 @@ public class DataProviderDescriptor implements IDataProviderDescriptor {
         private String fId = ""; //$NON-NLS-1$
         private String fName = ""; //$NON-NLS-1$
         private String fDescription = ""; //$NON-NLS-1$
+        private @Nullable IDataProviderCapabilities fCapabilities = null;
         private @Nullable ProviderType fType = null;
+        private @Nullable ITmfConfigurationSourceType fTimeGraphCreatorType;
+        private @Nullable ITmfConfiguration fTimeGraphCreatorConfiguration;
 
         /**
          * Constructor
@@ -154,6 +184,45 @@ public class DataProviderDescriptor implements IDataProviderDescriptor {
         }
 
         /**
+         * Set data provider source type for creating time graphs
+         *
+         * @param type
+         *            the configuration source type
+         * @return the builder instance.
+         * @since 9.3
+         */
+        public Builder setTimeGraphCreatorType(ITmfConfigurationSourceType type) {
+            fTimeGraphCreatorType = type;
+            return this;
+        }
+
+        /**
+         * Set configuration for creating time graphs
+         *
+         * @param config
+         *            the timegraph config
+         * @return the builder instance.
+         * @since 9.3
+         */
+        public Builder setTimeGraphConfiguration(ITmfConfiguration config) {
+            fTimeGraphCreatorConfiguration = config;
+            return this;
+        }
+
+        /**
+         * Set data provider capabilities
+         *
+         * @param capabilities
+         *            the capabilities to set
+         * @return the builder instance.
+         * @since 9.3
+         */
+        public Builder setCapabilities(IDataProviderCapabilities capabilities) {
+            fCapabilities = capabilities;
+            return this;
+        }
+
+        /**
          * The method to construct an instance of
          * {@link IDataProviderDescriptor}
          *
@@ -168,6 +237,5 @@ public class DataProviderDescriptor implements IDataProviderDescriptor {
             }
             return new DataProviderDescriptor(this);
         }
-
     }
 }

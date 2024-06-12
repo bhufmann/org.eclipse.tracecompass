@@ -12,6 +12,9 @@
 package org.eclipse.tracecompass.tmf.core.dataprovider;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSourceType;
 
 /**
  * Data Provider description, used to list the available providers for a trace
@@ -87,4 +90,24 @@ public interface IDataProviderDescriptor {
      * @return a short description of this data provider.
      */
     String getDescription();
+
+    /**
+     * @since 10.1
+     */
+    default @Nullable IDataProviderCapabilities getCapabilities() {
+        return null;
+    }
+    /**
+     * @since 10.1
+     */
+    default @Nullable ITmfConfigurationSourceType getTimeGraphCreatorType() {
+        return null;
+    }
+
+    /**
+     * @since 10.1
+     */
+    default @Nullable ITmfConfiguration getTimeGraphCreatorConfiguration() {
+        return null;
+    }
 }

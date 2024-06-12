@@ -11,6 +11,9 @@
 
 package org.eclipse.tracecompass.tmf.core.config;
 
+import java.util.List;
+
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
 import org.eclipse.tracecompass.tmf.core.exceptions.TmfConfigurationException;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 
@@ -21,6 +24,6 @@ import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
  * @since 10.1
  */
 public interface ITmfExperimentConfigSource extends ITmfConfigurationSource {
-    ITmfConfiguration applyConfiguration(String configId, ITmfTrace trace) throws TmfConfigurationException;
-    void removeConfiguration(String configId, ITmfTrace trace) throws TmfConfigurationException;
+    List<IDataProviderDescriptor> createDataProvider(String configId, ITmfTrace trace) throws TmfConfigurationException;
+    void removeDataProvider(IDataProviderDescriptor descriptor, ITmfTrace trace) throws TmfConfigurationException;
 }

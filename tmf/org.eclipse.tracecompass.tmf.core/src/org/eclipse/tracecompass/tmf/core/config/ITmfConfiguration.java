@@ -10,11 +10,7 @@
  *******************************************************************************/
 package org.eclipse.tracecompass.tmf.core.config;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-
-import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
 
 /**
  * Interface describing a configuration instance.
@@ -47,14 +43,5 @@ public interface ITmfConfiguration {
      * @return optional informational parameters to return. Can be used to show
      *         more details to users of the configuration instance.
      */
-    Map<String, Object> getParameters();
-
-    /**
-     *
-     * @return optional list of data provider descriptors if exists and available at time of configuration
-     * @since 10.1
-     */
-    default List<IDataProviderDescriptor> getDataProviderDescriptors() {
-        return Collections.emptyList();
-    }
+    Map<String, String> getParameters();
 }

@@ -14,17 +14,27 @@
 
 package org.eclipse.tracecompass.internal.tmf.core.analysis;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.tracecompass.internal.tmf.core.Activator;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleHelper;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleSource;
 import org.eclipse.tracecompass.tmf.core.analysis.TmfAnalysisModuleHelperConfigElement;
 import org.eclipse.tracecompass.tmf.core.analysis.TmfAnalysisOutputManager;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
+import org.eclipse.tracecompass.tmf.core.config.TmfJsonConfiguration;
+import org.eclipse.tracecompass.tmf.core.exceptions.TmfConfigurationException;
+import org.eclipse.tracecompass.tmf.core.signal.TmfConfigurableAnalysisUpdatedSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.osgi.framework.Bundle;
 
 /**
  * Utility class for accessing TMF analysis module extensions from the
@@ -79,10 +89,14 @@ public final class TmfAnalysisModuleSourceConfigElement implements IAnalysisModu
     /** Extension point attribute to hide default outputs (e.g. views) */
     public static final String HIDE_OUTPUT_ELEM = "hideOutput"; //$NON-NLS-1$
 
+    /** Extension point attribute for root directory with configuration files */
+    public static final String CONFIG_ROOT_ELEM = "config_root"; //$NON-NLS-1$
+
     /**
      * The mapping of available analysis ID to their corresponding helper
      */
     private final List<IAnalysisModuleHelper> fAnalysisHelpers = new ArrayList<>();
+    private final List<IAnalysisModuleHelper> fConfigurableAnalysisHelpers = new ArrayList<>();
 
     /**
      * Retrieves all configuration elements from the platform extension registry
@@ -106,12 +120,18 @@ public final class TmfAnalysisModuleSourceConfigElement implements IAnalysisModu
      * Constructor
      */
     public TmfAnalysisModuleSourceConfigElement() {
+        TmfSignalManager.register(this);
         populateAnalysisList();
     }
 
     @Override
     public Iterable<IAnalysisModuleHelper> getAnalysisModules() {
-        return fAnalysisHelpers;
+        synchronized (fConfigurableAnalysisHelpers) {
+            List<IAnalysisModuleHelper> result = new ArrayList<>();
+            result.addAll(fAnalysisHelpers);
+            result.addAll(fConfigurableAnalysisHelpers);
+            return result;
+        }
     }
 
     private void populateAnalysisList() {
@@ -124,12 +144,61 @@ public final class TmfAnalysisModuleSourceConfigElement implements IAnalysisModu
                     TmfAnalysisOutputManager.getInstance().loadExclusion(ce);
                 }
             }
-            for (IConfigurationElement ce : config) {
-                String elementName = ce.getName();
-                if (elementName.equals(TmfAnalysisModuleSourceConfigElement.MODULE_ELEM)) {
-                    fAnalysisHelpers.add(new TmfAnalysisModuleHelperConfigElement(ce));
+            if (config != null) {
+                populateAnalysisList(config, true);
+            }
+        }
+    }
+
+    private void populateAnalysisList(IConfigurationElement[] config, boolean all) {
+        List<IAnalysisModuleHelper> configurableAnalysisHelpers = new ArrayList<>();
+        for (IConfigurationElement ce : config) {
+            String elementName = ce.getName();
+            if (elementName.equals(TmfAnalysisModuleSourceConfigElement.MODULE_ELEM)) {
+                String rootDir = ce.getAttribute(TmfAnalysisModuleSourceConfigElement.CONFIG_ROOT_ELEM);
+                Bundle bundle = TmfAnalysisModuleHelperConfigElement.getBundle(ce);
+                if (rootDir != null) {
+                    IPath path = Activator.getDefault()
+                            .getStateLocation()
+                            .removeLastSegments(1)
+                            .append(bundle.getSymbolicName())
+                            .append(rootDir);
+                    File folder = path.toFile();
+                    if (folder.exists()) {
+                        final File[] files = folder.listFiles();
+                        for (File file : files) {
+                            try {
+                                @SuppressWarnings("null")
+                                ITmfConfiguration tmfConfig = TmfJsonConfiguration.fromJsonFile(file);
+                                configurableAnalysisHelpers.add(new TmfAnalysisModuleHelperConfigElement(ce, tmfConfig));
+                            } catch (TmfConfigurationException e) {
+                                Activator.logError("Can't read configuration from file", e); //$NON-NLS-1$
+                            }
+                        }
+                    }
+                } else {
+                    if (all) {
+                        fAnalysisHelpers.add(new TmfAnalysisModuleHelperConfigElement(ce));
+                    }
                 }
             }
+        }
+        synchronized (fConfigurableAnalysisHelpers) {
+            fConfigurableAnalysisHelpers.clear();
+            fConfigurableAnalysisHelpers.addAll(configurableAnalysisHelpers);
+        }
+    }
+
+    /**
+     * Signal handler to refresh configurable analysis references
+     * @param signal
+     *            the signal to handle
+     */
+    @TmfSignalHandler
+    public void configurableAnalysisUpdated(final TmfConfigurableAnalysisUpdatedSignal signal) {
+        IConfigurationElement[] config = Platform.getExtensionRegistry().getConfigurationElementsFor(TMF_ANALYSIS_TYPE_ID);
+        if (config != null) {
+            populateAnalysisList(config, true);
         }
     }
 

@@ -107,6 +107,13 @@
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="config_root" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

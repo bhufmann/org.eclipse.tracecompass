@@ -36,6 +36,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.internal.tmf.core.Activator;
 import org.eclipse.tracecompass.internal.tmf.core.analysis.TmfAnalysisModuleSourceConfigElement;
 import org.eclipse.tracecompass.tmf.core.analysis.requirements.TmfAbstractAnalysisRequirement;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.exceptions.TmfAnalysisException;
 import org.eclipse.tracecompass.tmf.core.project.model.TmfTraceType;
 import org.eclipse.tracecompass.tmf.core.project.model.TraceTypeHelper;
@@ -81,6 +82,7 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
 
     private final IConfigurationElement fCe;
     private @Nullable List<ApplicableClass> fApplicableClasses = null;
+    private @Nullable final ITmfConfiguration fConfiguration;
 
     /**
      * Constructor
@@ -90,6 +92,21 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
      */
     public TmfAnalysisModuleHelperConfigElement(IConfigurationElement ce) {
         fCe = ce;
+        fConfiguration = null;
+    }
+
+    /**
+     * Constructor
+     *
+     * @param ce
+     *            The source {@link IConfigurationElement} of this module helper
+     * @param configuration
+     *            The configuration to customize the analysis
+     * @since 9.5
+     */
+    public TmfAnalysisModuleHelperConfigElement(IConfigurationElement ce, ITmfConfiguration configuration) {
+        fCe = ce;
+        fConfiguration = configuration;
     }
 
     // ----------------------------------------
@@ -102,6 +119,9 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
         if (id == null) {
             throw new IllegalStateException();
         }
+        if (fConfiguration != null) {
+            return id + fConfiguration.getId();
+        }
         return id;
     }
 
@@ -110,6 +130,9 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
         String name = fCe.getAttribute(TmfAnalysisModuleSourceConfigElement.NAME_ATTR);
         if (name == null) {
             throw new IllegalStateException();
+        }
+        if (fConfiguration != null) {
+            return name + " for " + fConfiguration.getId(); //$NON-NLS-1$
         }
         return name;
     }
@@ -125,6 +148,15 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
     @Override
     public boolean appliesToExperiment() {
         return Boolean.parseBoolean(fCe.getAttribute(TmfAnalysisModuleSourceConfigElement.APPLIES_EXP_ATTR));
+    }
+
+    /**
+     * @return the configuration root path
+     * @since 9.5
+     */
+    @Override
+    public String getConfigurationRoot() {
+        return fCe.getAttribute(TmfAnalysisModuleSourceConfigElement.CONFIG_ROOT_ELEM);
     }
 
     @Override
@@ -146,7 +178,16 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
         return getBundle(fCe);
     }
 
-    private static Bundle getBundle(IConfigurationElement element) {
+    /**
+     * Get the bundle of a given {@link IConfigurationElement}
+     *
+     * @param element
+     *            {@link IConfigurationElement}
+     * @return the Bundle of the given {@link IConfigurationElement} or null if
+     *         can't be determined
+     * @since 9.5
+     */
+    public static Bundle getBundle(IConfigurationElement element) {
         return ContributorFactoryOSGi.resolve(element.getContributor());
     }
 
@@ -347,6 +388,18 @@ public class TmfAnalysisModuleHelperConfigElement implements IAnalysisModuleHelp
                 module.setParameter(paramName, defaultValue);
             }
         }
+
+        if ((fConfiguration != null) && !module.setConfiguration(fConfiguration)) {
+            /*
+             * verify if valid config
+             * verify if it applies to trace instance
+             */
+            module.dispose();
+            return null;
+        }
+
+        module.setConfigurationRoot(getConfigurationRoot());
+
         if (module.setTrace(trace)) {
             TmfAnalysisManager.analysisModuleCreated(module);
         } else {

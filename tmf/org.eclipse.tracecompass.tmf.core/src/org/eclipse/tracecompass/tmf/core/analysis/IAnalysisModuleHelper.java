@@ -130,6 +130,14 @@ public interface IAnalysisModuleHelper extends IAnalysisRequirementProvider {
      */
     boolean appliesToExperiment();
 
+    /**
+     * @return the configuration root path
+     * @since 9.5
+     */
+    default String getConfigurationRoot() {
+        return null;
+    }
+
     // ---------------------------------------
     // Functionalities
     // ---------------------------------------

@@ -101,7 +101,8 @@ public class FlameChartDataProviderFactory implements IDataProviderFactory {
                 builder.setId(FlameChartDataProvider.ID + DataProviderConstants.ID_SEPARATOR + analysis.getId())
                         .setName(Objects.requireNonNull(Messages.FlameChartDataProvider_Title + " " + analysis.getName())) //$NON-NLS-1$
                         .setDescription(Objects.requireNonNull(NLS.bind(Messages.FlameChartDataProvider_Description, analysis.getHelpText())))
-                        .setProviderType(ProviderType.TIME_GRAPH);
+                        .setProviderType(ProviderType.TIME_GRAPH)
+                        .setCreationConfiguration(analysis.getConfiguration());
                 descriptors.add(builder.build());
                 existingModules.add(analysis.getId());
             }

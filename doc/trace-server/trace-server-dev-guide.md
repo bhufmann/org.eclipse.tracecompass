@@ -69,23 +69,23 @@ The following chapters describe the workspace of the Trace Compass trace server 
   ├── .lock/                                           # Lock file (when server is running)
   ├── .metadata                                        # Stores internal configuration and metadata.
       ├── .plugins/                                    # Plugin-specific data
-      │       ├── org.eclipse.tracecompass.tmf.analysis.xml.core # xml.core plugin specific data
-      │       │   └── xml_files                        # root folder for xml files
-      │       │       ├── my-custom-analysis.xml       # example xml analysis   
+      │       ├── org.eclipse.tracecompass.tmf.analysis.xml.core # xml.core plugin specific data
+      │       │   └── xml_files                        # root folder for xml files
+      │       │       ├── my-custom-analysis.xml       # example xml analysis   
       |       |       ├── ...
-      │       ├── org.eclipse.tracecompass.tmf.core    # tmf.core plugin specific data
-      │       │   ├── dataprovider.ini                 # file to hide/show data providers
-      │       │   ├── markers.xml                      # definition of overlay markers
-      │       │   └── markers.xsd                      # xsd for markers.xml 
-      |       ├── org.eclipse.core.runtime             # Platform runtime configuraiton files
-      |       │   └── .settings
-      |       │       ├── org.eclipse.tracecompass.tmf.analysis.xml.core.prefs # xml.core preferences
+      │       ├── org.eclipse.tracecompass.tmf.core    # tmf.core plugin specific data
+      │       │   ├── dataprovider.ini                 # file to hide/show data providers
+      │       │   ├── markers.xml                      # definition of overlay markers
+      │       │   └── markers.xsd                      # xsd for markers.xml 
+      |       ├── org.eclipse.core.runtime             # Platform runtime configuraiton files
+      |       │   └── .settings
+      |       │       ├── org.eclipse.tracecompass.tmf.analysis.xml.core.prefs # xml.core preferences
       |       |       ├── org.eclipse.tracecompass.tmf.core.prefs              # tmf.core preferences 
-              |       ├── ...
-      │       ├── org.eclipse.core.resources           # Eclipse platform file system resources related files
-      │       │   ├── .projects
-      │       │   │   └── Tracing                      # Platform files for Tracing project
-      │       │   │       ├── .indexes                 # Resources indexes
+      |       |       ├── ...
+      │       ├── org.eclipse.core.resources           # Eclipse platform file system resources related files
+      │       │   ├── .projects
+      │       │   │   └── Tracing                      # Platform files for Tracing project
+      │       │   │       ├── .indexes                 # Resources indexes
       |       |   |       ├── ... 
       |       |   ├── ...
       |       ├── ...   
@@ -155,8 +155,8 @@ Each experiment has a supplementary folder under the `.tracing` folder for exper
 
 Each trace has also a supplementary folder under the `tracing` folder. The path of the trace supplementary folder matches the of trace under the `Traces` folder. 
 
-#### How to find the supplementary folder for a trace or experiment
-When a trace is openend or a experiment is created the supplementary folder is created by the server application. It stores the path into persistent property of the `org.eclipse.core.resources.IFolder` representing the trace in the workspace.
+#### Finding the supplementary folder for a trace or experiment
+When a trace is openend or a experiment is created the supplementary folder is created by the server application. It stores the path into persistent property of the `org.eclipse.core.resources.IFolder` representing the trace in the workspace. See below for the code snipped that sets the supplementary folder persistent property.
 
 ```java
 import org.eclipse.core.resources.IFolder;
@@ -203,54 +203,1510 @@ Note:
 - If the `trace.getResource()` returns null, `TmfTraceManager.getSupplementaryFileDir(trace)` will create a temporary folder under the OS's temp folder (for Linux /tmp/) and returns this directory. This folder will be temporary and every call with a null resource it will create a new one. Hence, it's not suitable for persistence.
 - Always, use the Eclipse platform API to create resources and to set the persistence property.
 
-## How to create a custom trace server
+## Implementing a custom trace server
 
 To create a custom trace server based on Trace Compass, a custom Eclipse RCP application has to be defined that includes all relevant Trace Compass core plug-ins, core extensions (e.g. lttng.core, profiling.core) and all custom plug-ins for custom trace parsing and analysis. Don't include any plug-ins that requires UI. The best way to start is to copy the following Trace Compass server plug-in projects and modify the content. 
 
 TODO
 
-## How to create a analysis module
-To create analysis modules using the `Analysis Framework` follow the instructions in the Trace Compass developer guide. Those analysis modules are applicable to all traces of given trace type or all trace types. The can be executed automatically when open a trace or can be executed manually when opening a output.
+## Implementing an analysis module
 
-## How to take advantage of Analysis Framework
+To create analysis modules using the `Analysis Framework` follow the instructions in the Trace Compass developer guide. Those analysis modules are applicable to all traces of given trace type or all trace types. The can be executed automatically when open a trace or can be executed manually when opening a output. When a trace or experiment is opened (when handling the `TmfTraceOpenedSignal`) the `TmfTrace` instance will get all registered analysis modules from the `TmfAnalysisManager` that are applicable for the trace or trace type. It is also possible to add analysis modules programatically using the `ITmfTrace.addAnalysisModule(ITmfAnalysisModule)`, which can be used, for example, for configurable analysis modules that created outside the analysis frame work (see [here](#implementing-a-itmfdataproviderconfigurator-with-an-analysis-module)). All analysis module instances stored in the `TmfTrace` will be disposed automatically when a trace is closed (upon reception of the `TmfTraceClosedSignal`).
 
-TODO utilites
+### Taking advantage of the Analysis Framework
 
-## How to create a data provider
+There are multiple utilitis and classes that help to access the analysis modules for a trace. Use `TmfTraceUtils` or `TmfAnalysisManager` for that.
 
-The Trace Compass server and the Trace Server Protocol is not aware of the concept `Analysis` in contrary to the Eclipse Trace Compass RCP application. The Trace Compass server however, uses data providers to visualize analysis results. To create a data provider follow the instructions in the Trace Compass developer guide.
+## Creating a data provider
 
-These instructions are not enough to make the data providers visible over the Trace Server Protocol (TSP). Each data provider factory created in through those instructions has to implement the `IDataProviderFactory.getDescriptor(ITmfTrace)` method which returns a list of data provider descriptors that this factory can instantiate.
+The data provider interface aims to provide a standard data model for different types of views. 
+
+Data providers are queried with a query parameters, which usually contains a time range as well as other parameters required to correctly filter and sample the returned data. They also take an optional progress monitor to cancel the task. The returned models are encapsulated in a `TmfModelResponse` object, which is generic (to the response's type) and also encapsulates the Status of the reponse:
+
+* `CANCELLED` if the query was cancelled by the progress monitor
+* `FAILED` if an error occurred inside the data provider
+* `RUNNING` if the response was returned before the underlying analysis was completed, and querying the provider again with the same parameters can return a different model.
+* `COMPLETED` if the underlying analysis is finished and we do not expect a different response for the query parameters.
+
+`Note` that a complete example of analysis and data provider can be found in the [org.eclipse.tracecompass.examples.core plugin sources](https://github.com/eclipse-tracecompass/org.eclipse.tracecompass/blob/master/doc/org.eclipse.tracecompass.examples.core) and [org.eclipse.tracecompass.examples.ui plugin sources](https://github.com/eclipse-tracecompass/org.eclipse.tracecompass/blob/master/doc/org.eclipse.tracecompass.examples.ui) respectively.''
+
+The Trace Compass server and the Trace Server Protocol is not aware of the concept `Analysis` in contrary to the Eclipse Trace Compass RCP application. The Trace Compass server however, uses data providers to visualize analysis results. The following chapters will go over how to generate different types of data providers and how to instantiate them in the trace server context. 
+
+Each data provider factory created through those instructions has to implement the `IDataProviderFactory.getDescriptor(ITmfTrace)` method which returns a list of data provider descriptors that this factory can instantiate. This will make the data providers visible over the Trace Server Protocol (TSP).
+
+### Creating an XY Data Provider
+The XY data provider type is used to associate an XY series to an entry from the tree. The data provider is queried with a filter that also contains a Collection of the IDs of the entries for which we want XY series. The response contains a map of the series for the desired IDs.
+
+Each XY series can have its own x axis (`ISeriesModel` / `SeriesModel` - encapsulated in an `ITmfXyModel` / `TmfXyModel`) or they can be shared by all models (`IYModel` / `YModel` encapsulated in an `ITmfCommonXAxisModel` / `TmfCommonXAxisModel`). The X axis is an array of longs, which makes it useful for a time axis or time buckets, but it can be used for any XY content.
+
+The interface to implement is `ITmfTreeXYDataProvider`. Abstract base classes exist for common use case, e.g. `AbstractTreeCommonXDataProvider` or `AbstractTreeCommonXDataProvider` for tree data providers that are using a state system. Extend those classes if applicable.
+
+Here is a simple example of XY data provider, retrieving data from a simple state system displaying the child attributes of the root attributes.
 
 ```java
-(TODO)
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.examples.core.analysis.ExampleStateSystemAnalysisModule;
+import org.eclipse.tracecompass.internal.tmf.core.model.tree.AbstractTreeDataProvider;
+import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
+import org.eclipse.tracecompass.statesystem.core.exceptions.StateSystemDisposedException;
+import org.eclipse.tracecompass.statesystem.core.exceptions.TimeRangeException;
+import org.eclipse.tracecompass.statesystem.core.interval.ITmfStateInterval;
+import org.eclipse.tracecompass.tmf.core.dataprovider.DataProviderParameterUtils;
+import org.eclipse.tracecompass.tmf.core.model.CommonStatusMessage;
+import org.eclipse.tracecompass.tmf.core.model.TmfCommonXAxisModel;
+import org.eclipse.tracecompass.tmf.core.model.YModel;
+import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataModel;
+import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeDataModel;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeModel;
+import org.eclipse.tracecompass.tmf.core.model.xy.ITmfTreeXYDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.xy.ITmfXyModel;
+import org.eclipse.tracecompass.tmf.core.model.xy.IYModel;
+import org.eclipse.tracecompass.tmf.core.response.ITmfResponse;
+import org.eclipse.tracecompass.tmf.core.response.ITmfResponse.Status;
+import org.eclipse.tracecompass.tmf.core.response.TmfModelResponse;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
+/**
+ * An example of an XY data provider.
+ *
+ * @author Geneviève Bastien
+ */
+@SuppressWarnings("restriction")
+@NonNullByDefault
+public class ExampleXYDataProvider extends AbstractTreeDataProvider<ExampleStateSystemAnalysisModule, TmfTreeDataModel> implements ITmfTreeXYDataProvider<TmfTreeDataModel> {
+
+    /**
+     * Provider unique ID.
+     */
+    public static final String ID = "org.eclipse.tracecompass.examples.xy.dataprovider"; //$NON-NLS-1$
+    private static final AtomicLong sfAtomicId = new AtomicLong();
+
+    private final BiMap<Long, Integer> fIDToDisplayQuark = HashBiMap.create();
+
+    /**
+     * Constructor
+     *
+     * @param trace
+     *            The trace this data provider is for
+     * @param analysisModule
+     *            The analysis module
+     */
+    public ExampleXYDataProvider(ITmfTrace trace, ExampleStateSystemAnalysisModule analysisModule) {
+        super(trace, analysisModule);
+    }
+
+    /**
+     * Create the time graph data provider
+     *
+     * @param trace
+     *            The trace for which is the data provider
+     * @return The data provider
+     */
+    public static @Nullable ITmfTreeDataProvider<? extends ITmfTreeDataModel> create(ITmfTrace trace) {
+        ExampleStateSystemAnalysisModule module = TmfTraceUtils.getAnalysisModuleOfClass(trace, ExampleStateSystemAnalysisModule.class, ExampleStateSystemAnalysisModule.ID);
+        return module != null ? new ExampleXYDataProvider(trace, module) : null;
+    }
+
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    protected boolean isCacheable() {
+        return true;
+    }
+
+    @Override
+    protected TmfTreeModel<TmfTreeDataModel> getTree(ITmfStateSystem ss, Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) throws StateSystemDisposedException {
+        // Make an entry for each base quark
+        List<TmfTreeDataModel> entryList = new ArrayList<>();
+        for (Integer quark : ss.getQuarks("CPUs", "*")) { //$NON-NLS-1$ //$NON-NLS-2$
+            int statusQuark = ss.optQuarkRelative(quark, "Status"); //$NON-NLS-1$
+            if (statusQuark != ITmfStateSystem.INVALID_ATTRIBUTE) {
+                Long id = fIDToDisplayQuark.inverse().computeIfAbsent(statusQuark, q -> sfAtomicId.getAndIncrement());
+                entryList.add(new TmfTreeDataModel(id, -1, ss.getAttributeName(quark)));
+            }
+        }
+        return new TmfTreeModel<>(Collections.emptyList(), entryList);
+    }
+
+    @Override
+    public TmfModelResponse<ITmfXyModel> fetchXY(Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) {
+        ITmfStateSystem ss = getAnalysisModule().getStateSystem();
+        if (ss == null) {
+            return new TmfModelResponse<>(null, ITmfResponse.Status.FAILED, CommonStatusMessage.ANALYSIS_INITIALIZATION_FAILED);
+        }
+
+        Map<Integer, double[]> quarkToValues = new HashMap<>();
+        // Prepare the quarks to display
+        Collection<Long> selectedItems = DataProviderParameterUtils.extractSelectedItems(fetchParameters);
+        if (selectedItems == null) {
+            // No selected items, take them all
+            selectedItems = fIDToDisplayQuark.keySet();
+        }
+        List<Long> times = getTimes(ss, DataProviderParameterUtils.extractTimeRequested(fetchParameters));
+        for (Long id : selectedItems) {
+            Integer quark = fIDToDisplayQuark.get(id);
+            if (quark != null) {
+                quarkToValues.put(quark, new double[times.size()]);
+            }
+        }
+        long[] nativeTimes = new long[times.size()];
+        for (int i = 0; i < times.size(); i++) {
+            nativeTimes[i] = times.get(i);
+        }
+
+        // Query the state system to fill the array of values
+        try {
+            for (ITmfStateInterval interval : ss.query2D(quarkToValues.keySet(), times)) {
+                if (monitor != null && monitor.isCanceled()) {
+                    return new TmfModelResponse<>(null, Status.CANCELLED, CommonStatusMessage.TASK_CANCELLED);
+                }
+                double[] row = quarkToValues.get(interval.getAttribute());
+                Object value = interval.getValue();
+                if (row != null && (value instanceof Number)) {
+                    Double dblValue = ((Number) value).doubleValue();
+                    for (int i = 0; i < times.size(); i++) {
+                        Long time = times.get(i);
+                        if (interval.getStartTime() <= time && interval.getEndTime() >= time) {
+                            row[i] = dblValue;
+                        }
+                    }
+                }
+            }
+        } catch (IndexOutOfBoundsException | TimeRangeException | StateSystemDisposedException e) {
+            return new TmfModelResponse<>(null, Status.FAILED, CommonStatusMessage.STATE_SYSTEM_FAILED);
+        }
+        List<IYModel> models = new ArrayList<>();
+        for (Entry<Integer, double[]> values : quarkToValues.entrySet()) {
+            models.add(new YModel(fIDToDisplayQuark.inverse().getOrDefault(values.getKey(), -1L), values.getValue()));
+        }
+
+        return new TmfModelResponse<>(new TmfCommonXAxisModel("Example XY data provider", nativeTimes, models), Status.COMPLETED, CommonStatusMessage.COMPLETED); //$NON-NLS-1$
+    }
+
+    private static List<Long> getTimes(ITmfStateSystem key, @Nullable List<Long> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        List<@NonNull Long> times = new ArrayList<>();
+        for (long t : list) {
+            if (key.getStartTime() <= t && t <= key.getCurrentEndTime()) {
+                times.add(t);
+            }
+        }
+        Collections.sort(times);
+        return times;
+    }
+
+}
 ```
 
-Once the getDescripter(ITmfTrace) method is implemented, then the `DataProviderManager` can be used to fetch all avaliable data providers of a trace or experiment.
+Note that it possible to indicate to the client if this series should be shown by default. To achieve this use the class `TmfXyTreeDataModel` instead of `TmfTreeDataModel` for the tree model which has a default flag and set it to true.
+
+TODO supported query parameters
+
+### Creating a Time Graph Data Provider
+
+The Time Graph data provider is used to associate states to tree entries, i.e. a sampled list of states, with a start time, duration, integer value and optional label. The time graph states (`ITimeGraphState` / `TimeGraphState`) are encapsulated in an `ITimeGraphRowModel` which also provides the ID of the entry they map to.
+
+The time graph data provider can also supply arrows to link entries one to another with a start time and start ID as well as a duration and target ID. The interface to implement is `ITimeGraphArrow`, else `TimeGraphArrow` can be extended.
+
+Additional information can be added to the states with tooltips, which are maps of tooltip entry names to tooltip entry values. The data provider may also suggest styles for the states by implementing the `IOutputStyleProvider` interface.
+
+The interface to implement is `ITimeGraphDataProvider`.
+
+Also, if the data provider wants to provide some styling information, for example, colors, height and opacity, etc, it can implement the `IOutputStyleProvider` interface who will add a method to fetch styles. The `TimeGraphState` objects can then be constructed with a style and the view will automatically use this style information.
+
+If the data provider wants to provide some annotations, for example, symbols on rows or view-wide background duration layers, it can implement the `IOutputAnnotationProvider` interface who will add methods to fetch annotation categories and fetch annotations (per category).
+
+Here is a simple example of a time graph data provider, retrieving data from a simple state system where each root attribute is to be displayed. It also provides simple styling. No annotations are implemented here, see [ThreadStatusDataProvider](https://github.com/eclipse-tracecompass/org.eclipse.tracecompass/blob/master/analysis/org.eclipse.tracecompass.analysis.os.linux.core/src/org/eclipse/tracecompass/internal/analysis/os/linux/core/threadstatus/ThreadStatusDataProvider.java) for an example implementation of the `IOutputAnnotationProvider` interface.
+
+```java
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.examples.core.analysis.ExampleStateSystemAnalysisModule;
+import org.eclipse.tracecompass.internal.tmf.core.model.AbstractTmfTraceDataProvider;
+import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
+import org.eclipse.tracecompass.statesystem.core.exceptions.StateSystemDisposedException;
+import org.eclipse.tracecompass.statesystem.core.exceptions.TimeRangeException;
+import org.eclipse.tracecompass.statesystem.core.interval.ITmfStateInterval;
+import org.eclipse.tracecompass.tmf.core.dataprovider.DataProviderParameterUtils;
+import org.eclipse.tracecompass.tmf.core.dataprovider.X11ColorUtils;
+import org.eclipse.tracecompass.tmf.core.model.CommonStatusMessage;
+import org.eclipse.tracecompass.tmf.core.model.IOutputStyleProvider;
+import org.eclipse.tracecompass.tmf.core.model.OutputElementStyle;
+import org.eclipse.tracecompass.tmf.core.model.OutputStyleModel;
+import org.eclipse.tracecompass.tmf.core.model.StyleProperties;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphArrow;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphEntryModel;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphRowModel;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphState;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.TimeGraphEntryModel;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.TimeGraphModel;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.TimeGraphRowModel;
+import org.eclipse.tracecompass.tmf.core.model.timegraph.TimeGraphState;
+import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataModel;
+import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeModel;
+import org.eclipse.tracecompass.tmf.core.response.ITmfResponse;
+import org.eclipse.tracecompass.tmf.core.response.ITmfResponse.Status;
+import org.eclipse.tracecompass.tmf.core.response.TmfModelResponse;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
+
+/**
+ * An example of a time graph data provider.
+ *
+ * @author Geneviève Bastien
+ */
+@SuppressWarnings("restriction")
+@NonNullByDefault
+public class ExampleTimeGraphDataProvider extends AbstractTmfTraceDataProvider implements ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel>, IOutputStyleProvider {
+
+    /**
+     * Provider unique ID.
+     */
+    public static final String ID = "org.eclipse.tracecompass.examples.timegraph.dataprovider"; //$NON-NLS-1$
+    private static final AtomicLong sfAtomicId = new AtomicLong();
+    private static final String STYLE0_NAME = "style0"; //$NON-NLS-1$
+    private static final String STYLE1_NAME = "style1"; //$NON-NLS-1$
+    private static final String STYLE2_NAME = "style2"; //$NON-NLS-1$
+
+    /* The map of basic styles */
+    private static final Map<String, OutputElementStyle> STATE_MAP;
+    /*
+     * A map of styles names to a style that has the basic style as parent, to
+     * avoid returning complete styles for each state
+     */
+    private static final Map<String, OutputElementStyle> STYLE_MAP;
+
+    static {
+        /* Build three different styles to use as examples */
+        ImmutableMap.Builder<String, OutputElementStyle> builder = new ImmutableMap.Builder<>();
+
+        builder.put(STYLE0_NAME, new OutputElementStyle(null, ImmutableMap.of(StyleProperties.STYLE_NAME, STYLE0_NAME,
+                StyleProperties.BACKGROUND_COLOR, String.valueOf(X11ColorUtils.toHexColor("blue")), //$NON-NLS-1$
+                StyleProperties.HEIGHT, 0.5f,
+                StyleProperties.OPACITY, 0.75f)));
+        builder.put(STYLE1_NAME, new OutputElementStyle(null, ImmutableMap.of(StyleProperties.STYLE_NAME, STYLE1_NAME,
+                StyleProperties.BACKGROUND_COLOR, String.valueOf(X11ColorUtils.toHexColor("yellow")), //$NON-NLS-1$
+                StyleProperties.HEIGHT, 1.0f,
+                StyleProperties.OPACITY, 1.0f)));
+        builder.put(STYLE2_NAME, new OutputElementStyle(null, ImmutableMap.of(StyleProperties.STYLE_NAME, STYLE2_NAME,
+                StyleProperties.BACKGROUND_COLOR, String.valueOf(X11ColorUtils.toHexColor("green")), //$NON-NLS-1$
+                StyleProperties.HEIGHT, 0.75f,
+                StyleProperties.OPACITY, 0.5f)));
+        STATE_MAP = builder.build();
+
+        /* build the style map too */
+        builder = new ImmutableMap.Builder<>();
+        builder.put(STYLE0_NAME, new OutputElementStyle(STYLE0_NAME));
+        builder.put(STYLE1_NAME, new OutputElementStyle(STYLE1_NAME));
+        builder.put(STYLE2_NAME, new OutputElementStyle(STYLE2_NAME));
+        STYLE_MAP = builder.build();
+    }
+
+    private final BiMap<Long, Integer> fIDToDisplayQuark = HashBiMap.create();
+    private ExampleStateSystemAnalysisModule fModule;
+
+    /**
+     * Constructor
+     *
+     * @param trace
+     *            The trace this analysis is for
+     * @param module
+     *            The scripted analysis for this data provider
+     */
+    public ExampleTimeGraphDataProvider(ITmfTrace trace, ExampleStateSystemAnalysisModule module) {
+        super(trace);
+        fModule = module;
+    }
+
+    /**
+     * Create the time graph data provider
+     *
+     * @param trace
+     *            The trace for which is the data provider
+     * @return The data provider
+     */
+    public static @Nullable ITmfTreeDataProvider<? extends ITmfTreeDataModel> create(ITmfTrace trace) {
+        ExampleStateSystemAnalysisModule module = TmfTraceUtils.getAnalysisModuleOfClass(trace, ExampleStateSystemAnalysisModule.class, ExampleStateSystemAnalysisModule.ID);
+        return module != null ? new ExampleTimeGraphDataProvider(trace, module) : null;
+    }
+
+    @Override
+    public TmfModelResponse<TmfTreeModel<@NonNull ITimeGraphEntryModel>> fetchTree(Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) {
+        fModule.waitForInitialization();
+        ITmfStateSystem ss = fModule.getStateSystem();
+        if (ss == null) {
+            return new TmfModelResponse<>(null, ITmfResponse.Status.FAILED, CommonStatusMessage.ANALYSIS_INITIALIZATION_FAILED);
+        }
+
+        boolean isComplete = ss.waitUntilBuilt(0);
+        long endTime = ss.getCurrentEndTime();
+
+        // Make an entry for each base quark
+        List<ITimeGraphEntryModel> entryList = new ArrayList<>();
+        for (Integer quark : ss.getQuarks("CPUs", "*")) { //$NON-NLS-1$ //$NON-NLS-2$
+            Long id = fIDToDisplayQuark.inverse().computeIfAbsent(quark, q -> sfAtomicId.getAndIncrement());
+            entryList.add(new TimeGraphEntryModel(id, -1, ss.getAttributeName(quark), ss.getStartTime(), endTime));
+        }
+
+        Status status = isComplete ? Status.COMPLETED : Status.RUNNING;
+        String msg = isComplete ? CommonStatusMessage.COMPLETED : CommonStatusMessage.RUNNING;
+        return new TmfModelResponse<>(new TmfTreeModel<>(Collections.emptyList(), entryList), status, msg);
+    }
+
+    @Override
+    public @NonNull String getId() {
+        return ID;
+    }
+
+    @Override
+    public @NonNull TmfModelResponse<TimeGraphModel> fetchRowModel(Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) {
+        ITmfStateSystem ss = fModule.getStateSystem();
+        if (ss == null) {
+            return new TmfModelResponse<>(null, ITmfResponse.Status.FAILED, CommonStatusMessage.ANALYSIS_INITIALIZATION_FAILED);
+        }
+
+        try {
+            List<@NonNull ITimeGraphRowModel> rowModels = getDefaultRowModels(fetchParameters, ss, monitor);
+            if (rowModels == null) {
+                rowModels = Collections.emptyList();
+            }
+            return new TmfModelResponse<>(new TimeGraphModel(rowModels), Status.COMPLETED, CommonStatusMessage.COMPLETED);
+        } catch (IndexOutOfBoundsException | TimeRangeException | StateSystemDisposedException e) {
+            return new TmfModelResponse<>(null, Status.FAILED, CommonStatusMessage.STATE_SYSTEM_FAILED);
+        }
+    }
+
+    private @Nullable List<ITimeGraphRowModel> getDefaultRowModels(Map<String, Object> fetchParameters, ITmfStateSystem ss, @Nullable IProgressMonitor monitor) throws IndexOutOfBoundsException, TimeRangeException, StateSystemDisposedException {
+        Map<Integer, ITimeGraphRowModel> quarkToRow = new HashMap<>();
+        // Prepare the quarks to display
+        Collection<Long> selectedItems = DataProviderParameterUtils.extractSelectedItems(fetchParameters);
+        if (selectedItems == null) {
+            // No selected items, take them all
+            selectedItems = fIDToDisplayQuark.keySet();
+        }
+        for (Long id : selectedItems) {
+            Integer quark = fIDToDisplayQuark.get(id);
+            if (quark != null) {
+                quarkToRow.put(quark, new TimeGraphRowModel(id, new ArrayList<>()));
+            }
+        }
+
+        // This regex map automatically filters or highlights the entry
+        // according to the global filter entered by the user
+        Map<@NonNull Integer, @NonNull Predicate<@NonNull Multimap<@NonNull String, @NonNull Object>>> predicates = new HashMap<>();
+        Multimap<@NonNull Integer, @NonNull String> regexesMap = DataProviderParameterUtils.extractRegexFilter(fetchParameters);
+        if (regexesMap != null) {
+            predicates.putAll(computeRegexPredicate(regexesMap));
+        }
+
+        // Query the state system to fill the states
+        long currentEndTime = ss.getCurrentEndTime();
+        for (ITmfStateInterval interval : ss.query2D(quarkToRow.keySet(), getTimes(ss, DataProviderParameterUtils.extractTimeRequested(fetchParameters)))) {
+            if (monitor != null && monitor.isCanceled()) {
+                return Collections.emptyList();
+            }
+            ITimeGraphRowModel row = quarkToRow.get(interval.getAttribute());
+            if (row != null) {
+                List<@NonNull ITimeGraphState> states = row.getStates();
+                ITimeGraphState timeGraphState = getStateFromInterval(interval, currentEndTime);
+                // This call will compare the state with the filter predicate
+                applyFilterAndAddState(states, timeGraphState, row.getEntryID(), predicates, monitor);
+            }
+        }
+        for (ITimeGraphRowModel model : quarkToRow.values()) {
+            model.getStates().sort(Comparator.comparingLong(ITimeGraphState::getStartTime));
+        }
+
+        return new ArrayList<>(quarkToRow.values());
+    }
+
+    private static TimeGraphState getStateFromInterval(ITmfStateInterval statusInterval, long currentEndTime) {
+        long time = statusInterval.getStartTime();
+        long duration = Math.min(currentEndTime, statusInterval.getEndTime() + 1) - time;
+        Object o = statusInterval.getValue();
+        if (!(o instanceof Long)) {
+            // Add a null state
+            return new TimeGraphState(time, duration, Integer.MIN_VALUE);
+        }
+        String styleName = "style" + ((Long) o) % 3; //$NON-NLS-1$
+        return new TimeGraphState(time, duration, String.valueOf(o), STYLE_MAP.get(styleName));
+    }
+
+    private static Set<Long> getTimes(ITmfStateSystem key, @Nullable List<Long> list) {
+        if (list == null) {
+            return Collections.emptySet();
+        }
+        Set<@NonNull Long> times = new HashSet<>();
+        for (long t : list) {
+            if (key.getStartTime() <= t && t <= key.getCurrentEndTime()) {
+                times.add(t);
+            }
+        }
+        return times;
+    }
+
+    @Override
+    public @NonNull TmfModelResponse<List<ITimeGraphArrow>> fetchArrows(Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) {
+        /**
+         * If there were arrows to be drawn, this is where they would be defined
+         */
+        return new TmfModelResponse<>(null, Status.COMPLETED, CommonStatusMessage.COMPLETED);
+    }
+
+    @Override
+    public @NonNull TmfModelResponse<Map<String, String>> fetchTooltip(Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) {
+        /**
+         * If there were tooltips to be drawn, this is where they would be
+         * defined
+         */
+        return new TmfModelResponse<>(null, Status.COMPLETED, CommonStatusMessage.COMPLETED);
+    }
+
+    @Override
+    public TmfModelResponse<OutputStyleModel> fetchStyle(Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) {
+        return new TmfModelResponse<>(new OutputStyleModel(STATE_MAP), Status.COMPLETED, CommonStatusMessage.COMPLETED);
+    }
+
+}
+```
+
+TODO supported query parameters
+
+### Creating a Data Tree Data Provider
+
+A `Data Tree` data provider is used to display trees with columns, which can be used for statistics. The data provider returns a `TmfTreeDataModel` the same way as the XY or Time Graph tree.
+
+Here is an example of such data provider. This time, the example just implements the `ITmfTreeDataProvider`.
+
+```java
+/*******************************************************************************
+ * Copyright (c) 2025 Ericsson
+ *
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License 2.0 which
+ * accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *******************************************************************************/
+package org.eclipse.tracecompass.examples.core.data.provider;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
+import org.eclipse.tracecompass.tmf.core.event.ITmfLostEvent;
+import org.eclipse.tracecompass.tmf.core.model.CommonStatusMessage;
+import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeDataModel;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeModel;
+import org.eclipse.tracecompass.tmf.core.request.ITmfEventRequest;
+import org.eclipse.tracecompass.tmf.core.request.TmfEventRequest;
+import org.eclipse.tracecompass.tmf.core.response.ITmfResponse;
+import org.eclipse.tracecompass.tmf.core.response.ITmfResponse.Status;
+import org.eclipse.tracecompass.tmf.core.response.TmfModelResponse;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+
+/**
+ * Simple events statistics data provider
+ * 
+ * @author Bernd Hufmann
+ */
+@SuppressWarnings("null")
+@NonNullByDefault
+public class ExampleEventsStatisticsDataProvider implements ITmfTreeDataProvider<TmfTreeDataModel> {
+    private static long fCount = 0;
+
+    private @Nullable ITmfTrace fTrace;
+    private @Nullable StatsPerTypeRequest fRequest;
+    private @Nullable List<TmfTreeDataModel> fCachedResult = null;
+
+    /**
+     * Constructor
+     * @param trace
+     *          the trace (not experiment)
+     */
+    public ExampleEventsStatisticsDataProvider(ITmfTrace trace) {
+        fTrace = trace;
+    }
+
+    @Override
+    public @NonNull String getId() {
+        return "org.eclipse.tracecompass.examples.nomodulestats"; //$NON-NLS-1$
+    }
+
+    @Override
+    public @NonNull TmfModelResponse<TmfTreeModel<TmfTreeDataModel>> fetchTree(Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) {
+
+        ITmfTrace trace = fTrace;
+        if (trace == null) {
+            return new TmfModelResponse<>(null, ITmfResponse.Status.FAILED, CommonStatusMessage.ANALYSIS_INITIALIZATION_FAILED);
+        }
+
+        StatsPerTypeRequest request = fRequest;
+        if (request == null) {
+            // Start new request
+            request = new StatsPerTypeRequest(trace, TmfTimeRange.ETERNITY);
+            trace.sendRequest(request);
+            TmfTreeModel<TmfTreeDataModel> model = new TmfTreeModel<>(List.of("Name", "Value"), Collections.emptyList()); //$NON-NLS-1$ //$NON-NLS-2$
+            fRequest = request;
+            return new TmfModelResponse<>(model, Status.RUNNING, CommonStatusMessage.RUNNING);
+        }
+
+        if (request.isCancelled()) {
+            TmfTreeModel<TmfTreeDataModel> model = new TmfTreeModel<>(List.of("Name", "Value"), Collections.emptyList()); //$NON-NLS-1$ //$NON-NLS-2$
+            return new TmfModelResponse<>(model, Status.CANCELLED, CommonStatusMessage.TASK_CANCELLED);
+        }
+
+        if (!request.isCompleted()) {
+            TmfTreeModel<TmfTreeDataModel> model = new TmfTreeModel<>(List.of("Name", "Value"), Collections.emptyList()); //$NON-NLS-1$ //$NON-NLS-2$
+            return new TmfModelResponse<>(model, Status.RUNNING, CommonStatusMessage.RUNNING);
+        }
+
+        List<TmfTreeDataModel> values = fCachedResult;
+        if (values == null) {
+            long traceId = fCount++;
+            values = new ArrayList<>();
+            long total = 0;
+            for (Entry<String, Long> entry : request.getResults().entrySet()) {
+                values.add(new TmfTreeDataModel(fCount++, traceId, List.of(entry.getKey(), String.valueOf(entry.getValue()))));
+                total += entry.getValue();
+            }
+            TmfTreeDataModel traceEntry = new TmfTreeDataModel(traceId, -1, List.of(trace.getName(), String.valueOf(total)));
+            values.add(0, traceEntry);
+            fCachedResult = values;
+        }
+        TmfTreeModel<TmfTreeDataModel> model = new TmfTreeModel<>(List.of("Name", "Value"), values); //$NON-NLS-1$ //$NON-NLS-2$
+        return new TmfModelResponse<>(model, Status.COMPLETED, CommonStatusMessage.COMPLETED);
+    }
+
+    private class StatsPerTypeRequest extends TmfEventRequest {
+
+        /* Map in which the results are saved */
+        private final Map<@NonNull String, @NonNull Long> stats;
+
+        public StatsPerTypeRequest(ITmfTrace trace, TmfTimeRange range) {
+            super(trace.getEventType(), range, 0, ITmfEventRequest.ALL_DATA,
+                    ITmfEventRequest.ExecutionType.BACKGROUND);
+            this.stats = new HashMap<>();
+        }
+
+        public Map<@NonNull String, @NonNull Long> getResults() {
+            return stats;
+        }
+
+        @Override
+        public void handleData(final ITmfEvent event) {
+            super.handleData(event);
+            if (event.getTrace() == fTrace) {
+                String eventType = event.getName();
+                /*
+                 * Special handling for lost events: instead of counting just
+                 * one, we will count how many actual events it represents.
+                 */
+                if (event instanceof ITmfLostEvent) {
+                    ITmfLostEvent le = (ITmfLostEvent) event;
+                    incrementStats(eventType, le.getNbLostEvents());
+                    return;
+                }
+
+                /* For standard event types, just increment by one */
+                incrementStats(eventType, 1L);
+            }
+        }
+
+        private void incrementStats(@NonNull String key, long count) {
+            stats.merge(key, count, Long::sum);
+        }
+    }
+
+    @Override
+    public void dispose() {
+        fRequest = null;
+        fCachedResult = null;
+    }
+}
+```
+
+TODO supported query parameters
+
+### Virtual Table
+Another data provider type is the virtual table data provider for large data sets. See the [TmfEventTableDataProvider](https://github.com/eclipse-tracecompass/org.eclipse.tracecompass/blob/master/tmf/org.eclipse.tracecompass.tmf.core/src/org/eclipse/tracecompass/internal/provisional/tmf/core/model/events/TmfEventTableDataProvider.java) for an example of such data provider.
+
+## Using the data provider manager to access data providers
+
+Data providers can be managedby the `DataProviderManager` class, which uses an [extension point](#extension-point) and factories for data providers. Factories can also programatically registered (and deregistered) to (from) the `DataProviderManager`, see [here](#registering-a-data-provider-factory-programatically) for more details.
+
+This manager associates a unique data provider per trace and extension point ID, ensuring that data providers can be reused and that each entry for a trace reuses the same unique entry ID.
+
+The manager uses the registered data provider factories to get all available data providers for a trace and to get or create data provider instances based on the ID provided by the descriptors.
 
 ```java
     //...
-       ITmfTrace trace = getTrace();
-       List<IDataProviderDescriptors> descriptors = DataProviderManager.getAvailableProviders(trace);
-    //...
-```
+        ITmfTrace experiment = getExperiment();
+        List<IDataProviderDescriptors> descriptors = DataProviderManager.getAvailableProviders(experiment);
 
+        // fetch create the thread status data provider
+        String outputId = ThreadStatusDataProvider.ID;
+        ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = 
+            manager.fetchOrCreateDataProvider(experiment,
+                                              outputId, 
+                                              ITimeGraphDataProvider.class);
+            String outputId = ThreadStatusDataProvider.ID;
+
+        // fetch the existing data provider instance (created above)
+        ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider2 = 
+            manager.fetchExistingCreateDataProvider(experiment,
+                                                    outputId, 
+                                                    ITimeGraphDataProvider.class);
+    //...
+
+```
 The Trace Compass server will use this method for the corresponding endpoint to get all available data providers. (TODO)
 
+### Implementing a Data Provider Factory
+
+The data provider manager requires a factory for the various data providers, to create the data provider instances for a trace. Here is an example of factory class to create the time graph data provider of the previous section.
+
 ```java
-// TODO
+import java.util.Collection;
+import java.util.Collections;
+
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.examples.core.analysis.ExampleStateSystemAnalysisModule;
+import org.eclipse.tracecompass.internal.tmf.core.model.DataProviderDescriptor;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor.ProviderType;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderFactory;
+import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataModel;
+import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.xy.TmfTreeXYCompositeDataProvider;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
+
+/**
+ * An example of a time graph data provider factory.
+ *
+ * This factory is also in the developer documentation of Trace Compass. If it is
+ * modified here, the doc should also be updated.
+ *
+ * @author Geneviève Bastien
+ */
+@SuppressWarnings("restriction")
+public class ExampleTimeGraphProviderFactory implements IDataProviderFactory {
+    //...
+    private static final IDataProviderDescriptor DESCRIPTOR = new DataProviderDescriptor.Builder()
+            .setId(ExampleTimeGraphDataProvider.ID)
+            .setName("Example time graph data provider") //$NON-NLS-1$
+            .setDescription("This is an example of a time graph data provider using a state system analysis as a source of data") //$NON-NLS-1$
+            .setProviderType(ProviderType.TIME_GRAPH)
+            .build();
+
+    @Override
+    public @Nullable ITmfTreeDataProvider<? extends ITmfTreeDataModel> createProvider(ITmfTrace trace) {
+        Collection<@NonNull ITmfTrace> traces = TmfTraceManager.getTraceSet(trace);
+        if (traces.size() == 1) {
+            return ExampleTimeGraphDataProvider.create(trace);
+        }
+        return TmfTimeGraphCompositeDataProvider.create(traces, ExampleTimeGraphDataProvider.ID); //$NON-NLS-1$
+    }
+
+    @Override
+    public Collection<IDataProviderDescriptor> getDescriptors(@NonNull ITmfTrace trace) {
+        ExampleStateSystemAnalysisModule module = TmfTraceUtils.getAnalysisModuleOfClass(trace, ExampleStateSystemAnalysisModule.class, ExampleStateSystemAnalysisModule.ID);
+        return module != null ? Collections.singletonList(DESCRIPTOR) : Collections.emptyList();
+    }
+}
+```
+### Extension point
+This extension needs to be added to the plugin's plugin.xml file:
+
+```xml
+<extension point="org.eclipse.tracecompass.tmf.core.dataprovider">
+    <dataProviderFactory
+         class="org.eclipse.tracecompass.examples.core.data.provider.ExampleTimeGraphProviderFactory"
+         id="org.eclipse.tracecompass.examples.timegraph.dataprovider">
+    </dataProviderFactory>
+    <dataProviderFactory
+         class="org.eclipse.tracecompass.examples.core.data.provider.ExampleXYDataProviderFactory"
+         id="org.eclipse.tracecompass.examples.xy.dataprovider">
+    </dataProviderFactory>
+</extension>
 ```
 
-## How to implement configurable data provider
+### Using data provider factories with experiments
 
-Defining data providers statically as described in previous chapter is not always flexible enough for user's needs. It's often required to create derived data provider from an existing data provider. For example, it might be interesting to derive CPU usage data provider from the original CPU usage data provider, that shows the CPU usage for a given CPU. Another use case to derive a virtual table data provider from the events table data provider, that shows only trace events of with a certain events type.
+The Trace Compass framework allows to use the `DataProviderFactory` with single traces or experiments. The trace server will always create experiments even if a trace is a single trace.
 
-Using data provider configurators this is possible. 
+In the data provider manager, experiments also get a unique instance of a data provider, which can be specific or encapsulate the data providers from the child traces. For example, an experiment can have its own concrete data provider when required (an analysis that runs only on experiments), or the factory would create a `CompositeDataProvider` (using `TmfTreeXYCompositeDataProvider` or `TmfTimeGraphCompositeDataProvider`) encapsulating the providers from its traces. The benefit of encapsulating the providers from child traces is that their entries/IDs can be reused, limiting the number of created objects and ensuring consistency in views. These composite data providers dispatch the request to all the encapsulated providers and aggregates the results into the expected data structure.
+
+ The Data Provider Factories will have make sure that:
+- the getDescriptor(ITmfTrace) returns only a single data provider descriptor for the same type
+- it creates composite data provider instances (e.g. `TmfTimeGraphCompositeDataProvider`) with an array of data providers for each applicable sub-trace
+
+### Utilities
+
+Abstract base classes are provided for TreeXY and time graph data providers based on `TmfStateSystemAnalysisModule`s (`AbstractTreeCommonXDataProvider` and `AbstractTimeGraphDataProvider`, respectively). They handle concurrency, mapping of state system attributes to unique IDs, exceptions, caching and encapsulating the model in a response with the correct status.
+
+### Registering a data provider factory programatically
+
+The most common way to register data provider factories is using the extension point as descibed above. However, the `DataProviderManager` has APIs to register and deregister factories programatically. This allows to manage the lifecycle of custom data provider factories from extension code.
+
+```java
+    //...
+
+    // Register a custom factory
+    IDataProviderFactory factory = createCustomFactory();
+    DataProviderManager.addDataProviderFactory("my.custom.data.providater.factory");
+
+    // Deregister a custom factory
+    DataProviderManager.removeDataProviderFactory("my.custom.data.providater.factory");
+    //..
+```
+
+#### Implementing a facotry for single-instance data providers
+If you would like to create a `DataProviderFactory` for a data provider that is using one single analysis module, you can get the analysis module from the trace as shown in the example below.
+
+```java
+    @Override
+    public Collection<IDataProviderDescriptor> getDescriptors(@NonNull ITmfTrace trace) {
+        KernelAnalysisModule module = TmfTraceUtils.getAnalysisModuleOfClass(trace, KernelAnalysisModule.class, KernelAnalysisModule.ID);
+        IDataProviderDescriptor descriptor = new DataProviderDescriptor.Builder()
+                .setId(ThreadStatusDataProvider.ID)
+                .setName(Objects.requireNonNull(Messages.ThreadStatusDataProviderFactory_title))
+                .setDescription(Objects.requireNonNull(Messages.ThreadStatusDataProviderFactory_descriptionText))
+                .setProviderType(ProviderType.TIME_GRAPH)
+                .build();
+        return module != null ? Collections.singletonList(descriptor) : Collections.emptyList();
+    }
+```
+
+Note that the passed trace can be an experiment that contains one or more traces. For that make sure that a given data provider descriptor is only returned once. For example, if the experiment has 2 kernel traces, then return the `ThreadStatusDataprovider` descriptor only once. The code above will take care of it because method `KernelAnalysisModule module = TmfTraceUtils.getAnalysisModuleOfClass(trace, KernelAnalysisModule.class, KernelAnalysisModule.ID);` returns the first kernel analysis module found. If you where to use `Iterator<KernelAnalysisModule> iter = TmfTraceUtils.getAnalysisModulesOfClass(trace, KernelAnalysisModule.class)` it would return multiple modules if there are multiple kernel traces in the experiment.
+
+```java
+    @Override
+    public Collection<IDataProviderDescriptor> getDescriptors(ITmfTrace trace) {
+        Iterable<KernelAnalysisModule> modules = TmfTraceUtils.getAnalysisModulesOfClass(trace, KernelAnalysisModule.class);
+        List<IDataProviderDescriptor> descriptors = new ArrayList<>();
+        Set<String> existingModules = new HashSet<>();
+        for (ISegmentStoreProvider module : modules) {
+            IAnalysisModule analysis = (IAnalysisModule) module;
+            // Only add analysis once per trace (which could be an experiment)
+            if (!existingModules.contains(analysis.getId())) {
+                IDataProviderDescriptor descriptor = getDataProviderDescriptor(analysis);
+                if (descriptor != null) {
+                    descriptors.add(descriptor);
+                    existingModules.add(analysis.getId());
+                }
+            }
+        }
+        return descriptors;
+    }
+```
+
+With this data provider descriptor the factory needs to implement only the `IDataProviderFactory.createDataProvider(ITmfTrace)`.
+
+```java
+    @Override
+    public @Nullable ITmfTreeDataProvider<? extends ITmfTreeDataModel> createDataProvider(@NonNull ITmfTrace trace) {
+        if (trace instanceof TmfExperiment) {
+            return TmfTimeGraphCompositeDataProvider.create(TmfTraceManager.getTraceSet(trace), ThreadStatusDataProvider.ID);
+        }
+        KernelAnalysisModule module = TmfTraceUtils.getAnalysisModuleOfClass(trace, KernelAnalysisModule.class, KernelAnalysisModule.ID);
+        if (module != null) {
+            module.schedule();
+            return new ThreadStatusDataProvider(trace, module);
+        }
+
+        return null;
+    }
+```
+
+#### Implementing a facotry for multi-instance data providers
+
+For use cases that the `IDataProviderFactory` instance can create multiple instances of a data provider. One example is, a data provider that can be used with different analysis modules or configurations. For this case the ID of the `IDataProviderDescriptor` has to be created differently. It is required to concatenate the data provider factory ID and the analysis module ID separated by `:`.
+
+```java
+    @Override
+    public Collection<IDataProviderDescriptor> getDescriptors(ITmfTrace trace) {
+        Iterable<IFlameChartProvider> modules = TmfTraceUtils.getAnalysisModulesOfClass(trace, IFlameChartProvider.class);
+        List<IDataProviderDescriptor> descriptors = new ArrayList<>();
+        Set<String> existingModules = new HashSet<>();
+        for (IFlameChartProvider module : modules) {
+            IAnalysisModule analysis = module;
+            // Only add analysis once per trace (which could be an experiment)
+            if (!existingModules.contains(analysis.getId())) {
+                DataProviderDescriptor.Builder builder = new DataProviderDescriptor.Builder();
+                builder.setId(FlameChartDataProvider.ID + DataProviderConstants.ID_SEPARATOR + analysis.getId())
+                        .setParentId(analysis.getConfiguration() != null ? analysis.getId() : null)
+                        .setName(Objects.requireNonNull(analysis.getName() + " - " +Messages.FlameChartDataProvider_Title)) //$NON-NLS-1$
+                        .setDescription(Objects.requireNonNull(NLS.bind(Messages.FlameChartDataProvider_Description, analysis.getHelpText())))
+                        .setProviderType(ProviderType.TIME_GRAPH)
+                        .setConfiguration(analysis.getConfiguration());
+                descriptors.add(builder.build());
+                existingModules.add(analysis.getId());
+            }
+        }
+        return descriptors;
+    }
+```
+
+With this data provider descriptor the factory needs to implement the `IDataProviderFactory.createDataProvider(ITmfTrace, String secondaryId)`.
+
+The secondary ID in the example above is the analysis ID.
+
+```java
+    @Override
+    public @Nullable ITmfTreeDataProvider<? extends ITmfTreeDataModel> createProvider(ITmfTrace trace) {
+        return null;
+    }
+
+    @Override
+    public @Nullable ITmfTreeDataProvider<? extends ITmfTreeDataModel> createProvider(ITmfTrace trace, String secondaryId) {
+        if (trace instanceof TmfExperiment) {
+            return TmfTimeGraphCompositeDataProvider.create(TmfTraceManager.getTraceSet(trace), FlameChartDataProvider.ID, secondaryId);
+        }
+        IFlameChartProvider module = TmfTraceUtils.getAnalysisModuleOfClass(trace, IFlameChartProvider.class, secondaryId);
+        if (module != null) {
+            module.schedule();
+            return new FlameChartDataProvider(trace, module, secondaryId);
+        }
+
+        return null;
+    }
+```
+
+#### Grouping of data providers
+
+Data providers can be grouped under a common parent. A common parent is indicated by the `parentId` in the data provider descriptor. The data provider parent can be any of existing data providers or container data providers whose data provider descriptor has the `ProviderType.NONE`. They don't have any outputs associated with.
+
+```java
+    //...
+    @Override
+    public Collection<IDataProviderDescriptor> getDescriptors(@NonNull ITmfTrace trace) {
+        KernelAnalysisModule module = TmfTraceUtils.getAnalysisModuleOfClass(trace, KernelAnalysisModule.class, KernelAnalysisModule.ID);
+        descriptor = new DataProviderDescriptor.Builder()
+                .setId(ThreadStatusDataProvider.ID)
+                .setParentId("org.eclipse.tracecompass.linux.kernel");
+                .setName(Objects.requireNonNull(Messages.ThreadStatusDataProviderFactory_title))
+                .setDescription(Objects.requireNonNull(Messages.ThreadStatusDataProviderFactory_descriptionText))
+                .setProviderType(ProviderType.TIME_GRAPH)
+                .build();
+        return module != null ? Collections.singletonList(descriptor) : Collections.emptyList();
+    }
+    //...
+```
+
+#### Implementing a data provider without analysis module
+
+Data providers can use analysis modules, but they don't have to. For example, you can implement a data provider that gets the event statistics for the whole trace by reading all the events of a trace. See [Creating a Data Tree Data Provider](#creating-a-data-tree-data-provider) for an example.
+
+## Implementing a configurable data provider
+
+Defining data providers statically as described in the previous chapters is not always flexible enough for user's needs. It's often required to create derived data provider from an existing data provider or data providers based on some configuration parameters. For example, it might be interesting to derive a CPU usage data provider from the original CPU usage data provider, that shows the CPU usage for a given CPU only. Another use case is to derive a virtual table data provider from the events table data provider, that shows only trace events with a certain events type.
+
+Using data provider configurators this is possible. Note that this interface is hooked-up to the Trace Compass trace server so that end-users can configure it using client APIs. For Eclipse Trace Compass this is not done and extenders will have to manage such configurations using their custom UI implementation.
+
+A data provider configurator needs to implement the `ITmfDataPrvoiderConfigurator` interface. Implement the following methods
+
+- `List<ITmfConfigurationSourceType> getConfigurationSourceTypes()`
+   Return one or more configuration source type that this configurator can handle. The configuration source type descibes the input parameter to pass when creating a data provider
+- `IDataProviderDescriptor createDataProviderDescriptors(ITmfTrace trace, ITmfConfiguration configuration)`
+  This method is called to create derived data providers base on the input configuration. It returns a data provider descriptor of the derived data provider. The descriptor has to have the configuration set, has to have the capability of `canDelete` (so that it can be deleted) as well as it has to have an ID that has the configuration ID appended, which will be used by the corresponding data provider factory to create an instance of the data provider. It is repsonsible to create and manage analysis modules (e.g. add to ITmfTrace object) and persist the configuration in memory and disk so that it available after a server restart.
+- `removeDataProviderDescriptor(ITmfTrace trace, IDataProviderDescriptor descriptor) throws TmfConfigurationException`
+  Method is called to remove the derived data provider identified by the passed descriptor. It is responsible to clean-up analysis modules, delete peristent data (e.g. state systems) and delete persisted configuration (memory cache and disk).
+
+The corresponding data provider factory now has to adapt to this configurator. For that override add the configurator as class member to the factory and overide the `getAdapter()` method.
+
+Alternatively, the data provider factory can implement the `ITmfDataProviderConfigurator` itself on the contrary of containing the configurator class.
+
+The data provider descriptors generated by the factory (`getDescriptors(ITmfTrace)`) has to include all the descriptors created from a configuration. Let the configurator return the list of descriptors. Note that the descriptors of the configuration have to have the configuration set, has to have the capability of `canDelete` (so that it can be deleted) as well as it has to have a ID that has the configuration ID appended.
+
+The factory also has to use the configurator to apply the configuration when the `createDataProvider(ITmfTrace, String)` method is called, note that the secondaryId (String) will determine which configuration is applied.
+
+The actual data provider needs to apply the configuration. The easiest way is to pass it to the constructor and then inside the class use it. Make sure that the `getId()` method returns the concatenated ID and configuration ID.
+
+### Implementing a ITmfDataProviderConfigurator without analysis module
+
+The example below shows configurator for a data provider that doesn't use an analysis module, but it creates the data to return by reading the whole trace. 
+
+```java
+/*******************************************************************************
+ * Copyright (c) 2025 Ericsson
+ *
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License 2.0 which
+ * accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *******************************************************************************/
+
+package org.eclipse.tracecompass.examples.core.data.provider.config;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.List;
+
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.examples.core.Activator;
+import org.eclipse.tracecompass.tmf.core.component.DataProviderConstants;
+import org.eclipse.tracecompass.tmf.core.component.TmfComponent;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSourceType;
+import org.eclipse.tracecompass.tmf.core.config.ITmfDataProviderConfigurator;
+import org.eclipse.tracecompass.tmf.core.config.TmfConfigurationSourceType;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor.ProviderType;
+import org.eclipse.tracecompass.tmf.core.exceptions.TmfConfigurationException;
+import org.eclipse.tracecompass.tmf.core.model.DataProviderCapabilities;
+import org.eclipse.tracecompass.tmf.core.model.DataProviderDescriptor;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceClosedSignal;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+import org.osgi.framework.Bundle;
+
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+
+/**
+ * Example data provider configurator
+ */
+@SuppressWarnings({"nls", "null"})
+public class ExampleDataTreeDataProviderConfigurator extends TmfComponent implements ITmfDataProviderConfigurator {
+    
+    private static final ITmfConfigurationSourceType CONFIG_SOURCE_TYPE;
+    private static final String SCHEMA = "schema/example-schema.json";
+    
+    private Table<String, ITmfTrace, ITmfConfiguration> fTmfConfigurationTable = HashBasedTable.create();
+    
+    static {
+        Bundle bundle = Platform.getBundle(Activator.PLUGIN_ID);
+        IPath defaultPath = new Path(SCHEMA);
+        URL url = FileLocator.find(bundle, defaultPath, null);
+        File schemaFile = null;
+        try {
+            schemaFile = new File(FileLocator.toFileURL(url).toURI());
+        } catch (URISyntaxException | IOException e) {
+            Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, ("Failed to read schema file: " + SCHEMA + e)));
+        }
+        CONFIG_SOURCE_TYPE = new TmfConfigurationSourceType.Builder()
+                .setId("example.data.provider.config.source.type")
+                .setDescription("Example configuration source to demostrate a configurator")
+                .setName("Example configuration")
+                .setSchemaFile(schemaFile)
+                .build();
+    }
+
+    /**
+     * Constructor
+     */
+    public ExampleDataTreeDataProviderConfigurator() {
+        super("ExampleDataProviderConfigurator");
+    }
+
+    @Override
+    public @NonNull List<@NonNull ITmfConfigurationSourceType> getConfigurationSourceTypes() {
+        // Return one or more configuration source type that this configurator can handle
+        return List.of(CONFIG_SOURCE_TYPE);
+    }
+
+    @Override
+    public @NonNull IDataProviderDescriptor createDataProviderDescriptors(@NonNull ITmfTrace trace, @NonNull ITmfConfiguration configuration) throws TmfConfigurationException {
+        // Check if configuration exists
+        if (fTmfConfigurationTable.contains(configuration.getId(), trace)) {
+            throw new TmfConfigurationException("Configuration already exists with label: " + configuration.getName()); //$NON-NLS-1$
+        }
+        /* 
+         * - Apply configuration
+         *   - if needed, create analysis module with configuration and add it to the trace ITmfTrace.addAnalysisModule()
+         *   - parse parameters (e.g. JSON parse) in configuration and store data
+         * - Write configuration to disk (if it supposed to survive a restart)
+         *   - E.g. write it in supplementary directory of the trace (or experiment) or propagate it to supplementary directory of
+         *    of each trace in experiment.
+         *    - Use TmfConfiguration.writeConfiguration(configuration, null);
+         * - Store configuration for this trace in class storage
+         */
+        fTmfConfigurationTable.put(configuration.getId(), trace, configuration);
+
+        return getDescriptorFromConfig(configuration);
+    }
+
+    @Override
+    public void removeDataProviderDescriptor(@NonNull ITmfTrace trace, @NonNull IDataProviderDescriptor descriptor) throws TmfConfigurationException {
+        // Check if configuration exists
+        ITmfConfiguration creationConfiguration = descriptor.getConfiguration();
+        if (creationConfiguration == null) {
+            throw new TmfConfigurationException("Data provider was not created by a configuration"); //$NON-NLS-1$
+        }
+        
+        String configId = creationConfiguration.getId();
+        // Remove configuration from class storage
+        ITmfConfiguration config = fTmfConfigurationTable.get(configId, trace);
+        if (config == null) {
+            return;
+        }
+        config = fTmfConfigurationTable.remove(configId, trace);
+
+        /*
+         * - Remove configuration
+         *   - if needed, remove analysis from trace: ITmfAnalysisModule module =(ITmfTrace.removeAnalysisModule())
+         *   - Call module.dispose() analysis module
+         *   - Call module.clearPeristentData() (if analysis module has persistent data like a state system)
+         * - Delete configuration from disk (if it was persisted)
+         */
+        
+    }
+
+    /**
+     * Get list of configured descriptors
+     * @param trace
+     *            the trace
+     * @return list of configured descriptors
+     */
+    public List<IDataProviderDescriptor> getDataProviderDescriptors(ITmfTrace trace) {
+        return fTmfConfigurationTable.column(trace).values()
+                .stream()
+                .map(config -> getDescriptorFromConfig(config))
+                .toList();
+    }
+
+    // Create descriptors per configuration
+    private @NonNull static IDataProviderDescriptor getDescriptorFromConfig(ITmfConfiguration configuration) {
+        DataProviderDescriptor.Builder builder = new DataProviderDescriptor.Builder();
+            return builder.setId(generateID(configuration.getId()))
+                   .setConfiguration(configuration)
+                   .setParentId(ExampleConfigurableDataTreeDataProviderFactory.ID)
+                   .setCapabilities(new DataProviderCapabilities.Builder().setCanDelete(true).build())
+                   .setDescription(configuration.getDescription())
+                   .setName(configuration.getName())
+                   .setProviderType(ProviderType.DATA_TREE)
+                   .build();
+    }
+
+    /**
+     * Gets the configuration for a trace and configId
+     * @param trace
+     *          the trace
+     * @param configId
+     *          the configId
+     * @return the configuration for a trace and configId
+     */
+    public @Nullable ITmfConfiguration getConfiguration(ITmfTrace trace, String configId) {
+        return fTmfConfigurationTable.get(configId, trace);
+    }
+
+    /**
+     * Generate data provider ID using a config ID.
+     * 
+     * @param configId
+     *          the config id
+     * @return data provider ID using a config ID.
+     */
+    public static String generateID(String configId) {
+        return ExampleConfigurableDataTreeDataProviderFactory.ID + DataProviderConstants.ID_SEPARATOR + configId;
+        
+    }
+
+    /**
+     * Handles trace closed signal to clean configuration table for this trace
+     *
+     * @param signal
+     *            the close signal to handle
+     */
+    @TmfSignalHandler
+    public void traceClosed(TmfTraceClosedSignal signal) {
+        ITmfTrace trace = signal.getTrace();
+        fTmfConfigurationTable.column(trace).clear();
+    }
+}
+```
+
+Here is an example of a data provider factory implementation that uses the configurator above.
+
+```java
+/*******************************************************************************
+ * Copyright (c) 2025 Ericsson
+ *
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License 2.0 which
+ * accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *******************************************************************************/
+
+package org.eclipse.tracecompass.examples.core.data.provider.config;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderDescriptor.ProviderType;
+import org.eclipse.tracecompass.tmf.core.dataprovider.IDataProviderFactory;
+import org.eclipse.tracecompass.tmf.core.model.DataProviderCapabilities;
+import org.eclipse.tracecompass.tmf.core.model.DataProviderDescriptor;
+import org.eclipse.tracecompass.tmf.core.model.ITmfDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeCompositeDataProvider;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
+import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
+
+/**
+ * Example data provider factory
+ */
+public class ExampleConfigurableDataTreeDataProviderFactory implements IDataProviderFactory {
+    /** The factory ID */
+    public static final String ID = "org.eclipse.tracecompass.examples.nomodulestats.config"; //$NON-NLS-1$
+
+    private ExampleDataTreeDataProviderConfigurator fConfigurator = new ExampleDataTreeDataProviderConfigurator();
+    
+    private static final IDataProviderDescriptor DESCRIPTOR = new DataProviderDescriptor.Builder()
+            .setId(ID)
+            .setName("Simple Event Statistics (all)") //$NON-NLS-1$
+            .setDescription("Simple Event statistics all event") //$NON-NLS-1$
+            .setProviderType(ProviderType.DATA_TREE)
+             // Only for configurators, indicate that this data provider can create derived data providers
+            .setCapabilities(new DataProviderCapabilities.Builder().setCanCreate(true).build()) 
+            .build();
+
+    @Override
+    public @Nullable ITmfDataProvider createDataProvider(@NonNull ITmfTrace trace) {
+        if (trace instanceof TmfExperiment) {
+            return TmfTreeComis crpositeDataProvider.create(TmfTraceManager.getTraceSet(trace), ID);
+        }
+        return new ExampleConfigurableDataTreeDataProvider(trace);
+    }
+
+    @Override
+    @SuppressWarnings("null")
+    public @Nullable ITmfDataProvider createDataProvider(@NonNull ITmfTrace trace, String secondaryId) {
+        ITmfConfiguration config = fConfigurator.getConfiguration(trace, secondaryId);
+        if (trace instanceof TmfExperiment) {
+            List<ExampleConfigurableDataTreeDataProvider> list = TmfTraceManager.getTraceSet(trace)
+                .stream()
+                .map(tr -> new ExampleConfigurableDataTreeDataProvider(tr, config))
+               .toList();
+            return new TmfTreeCompositeDataProvider<>(list, ExampleDataTreeDataProviderConfigurator.generateID(secondaryId));
+        }
+        return new ExampleConfigurableDataTreeDataProvider(trace, config);
+    }
+
+    @Override
+    public @NonNull Collection<IDataProviderDescriptor> getDescriptors(@NonNull ITmfTrace trace) {
+        List<IDataProviderDescriptor> descriptors = new ArrayList<>();
+        descriptors.add(DESCRIPTOR);
+        descriptors.addAll(fConfigurator.getDataProviderDescriptors(trace));
+        return descriptors;
+    }
+
+    @Override
+    public <T> @Nullable T getAdapter(Class<T> adapter) {
+        if (adapter.isAssignableFrom(ExampleDataTreeDataProviderConfigurator.class)) {
+            return adapter.cast(fConfigurator);
+        }
+        return IDataProviderFactory.super.getAdapter(adapter);
+    }
+
+    @Override
+    public void dispose() {
+        fConfigurator.dispose();
+    }
+}
+```
+
+Here is an example implementation that the data provider factory above using a configuration.
+
+```java
+/*******************************************************************************
+ * Copyright (c) 2025 Ericsson
+ *
+ * All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License 2.0 which
+ * accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *******************************************************************************/
+package org.eclipse.tracecompass.examples.core.data.provider.config;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.tmf.core.component.DataProviderConstants;
+import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
+import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
+import org.eclipse.tracecompass.tmf.core.event.ITmfLostEvent;
+import org.eclipse.tracecompass.tmf.core.event.aspect.TmfBaseAspects;
+import org.eclipse.tracecompass.tmf.core.filter.ITmfFilter;
+import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterMatchesNode;
+import org.eclipse.tracecompass.tmf.core.model.CommonStatusMessage;
+import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeDataModel;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeModel;
+import org.eclipse.tracecompass.tmf.core.request.ITmfEventRequest;
+import org.eclipse.tracecompass.tmf.core.request.TmfEventRequest;
+import org.eclipse.tracecompass.tmf.core.response.ITmfResponse;
+import org.eclipse.tracecompass.tmf.core.response.ITmfResponse.Status;
+import org.eclipse.tracecompass.tmf.core.response.TmfModelResponse;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+/**
+ * Simple events statistics data provider
+ * 
+ * @author Bernd Hufmann
+ */
+@SuppressWarnings("null")
+@NonNullByDefault
+public class ExampleConfigurableDataTreeDataProvider implements ITmfTreeDataProvider<TmfTreeDataModel> {
+    private static final String BASE_ID = "org.eclipse.tracecompass.examples.nomodulestats.config"; //$NON-NLS-1$;
+    
+    private static long fCount = 0;
+    
+    private @Nullable ITmfTrace fTrace;
+    private @Nullable StatsPerTypeRequest fRequest;
+    private @Nullable List<TmfTreeDataModel> fCachedResult = null;
+    private @Nullable ITmfConfiguration fConfiguration;
+    private String fId = BASE_ID;
+
+    /**
+     * Constructor
+     * @param trace
+     *          the trace (not experiment)
+     */
+    public ExampleConfigurableDataTreeDataProvider(ITmfTrace trace) {
+        this(trace, null);
+    }
+
+    /**
+     * Constructor with configuration
+     * @param trace
+     *      the trace (not experiment)
+     * @param configuration
+     *      the configuration
+     */
+    public ExampleConfigurableDataTreeDataProvider(ITmfTrace trace, @Nullable ITmfConfiguration configuration) {
+        fTrace = trace;
+        fConfiguration = configuration;
+        if (configuration != null) {
+            fId = BASE_ID + DataProviderConstants.ID_SEPARATOR + configuration.getId();
+        }
+    }
+
+    @Override
+    public @NonNull String getId() {
+        return fId;
+    }
+
+    @Override
+    public @NonNull TmfModelResponse<TmfTreeModel<TmfTreeDataModel>> fetchTree(Map<String, Object> fetchParameters, @Nullable IProgressMonitor monitor) {
+
+        ITmfTrace trace = fTrace;
+        if (trace == null) {
+            return new TmfModelResponse<>(null, ITmfResponse.Status.FAILED, CommonStatusMessage.ANALYSIS_INITIALIZATION_FAILED);
+        }
+
+        StatsPerTypeRequest request = fRequest;
+        if (request == null) {
+            // Start new request
+            request = new StatsPerTypeRequest(trace, TmfTimeRange.ETERNITY);
+            trace.sendRequest(request);
+            TmfTreeModel<TmfTreeDataModel> model = new TmfTreeModel<>(List.of("Name", "Value"), Collections.emptyList()); //$NON-NLS-1$ //$NON-NLS-2$
+            fRequest = request;
+            return new TmfModelResponse<>(model, Status.RUNNING, CommonStatusMessage.RUNNING);
+        }
+
+        if (request.isCancelled()) {
+            TmfTreeModel<TmfTreeDataModel> model = new TmfTreeModel<>(List.of("Name", "Value"), Collections.emptyList()); //$NON-NLS-1$ //$NON-NLS-2$
+            return new TmfModelResponse<>(model, Status.CANCELLED, CommonStatusMessage.TASK_CANCELLED);
+        }
+
+        if (!request.isCompleted()) {
+            TmfTreeModel<TmfTreeDataModel> model = new TmfTreeModel<>(List.of("Name", "Value"), Collections.emptyList()); //$NON-NLS-1$ //$NON-NLS-2$
+            return new TmfModelResponse<>(model, Status.RUNNING, CommonStatusMessage.RUNNING);
+        }
+
+        List<TmfTreeDataModel> values = fCachedResult;
+        if (values == null) {
+            long traceId = fCount++;
+            values = new ArrayList<>();
+            long total = 0;
+            for (Entry<String, Long> entry : request.getResults().entrySet()) {
+                values.add(new TmfTreeDataModel(fCount++, traceId, List.of(entry.getKey(), String.valueOf(entry.getValue()))));
+                total += entry.getValue();
+            }
+            TmfTreeDataModel traceEntry = new TmfTreeDataModel(traceId, -1, List.of(trace.getName(), String.valueOf(total)));
+            values.add(0, traceEntry);
+            fCachedResult = values;
+        }
+        TmfTreeModel<TmfTreeDataModel> model = new TmfTreeModel<>(List.of("Name", "Value"), values); //$NON-NLS-1$ //$NON-NLS-2$
+        return new TmfModelResponse<>(model, Status.COMPLETED, CommonStatusMessage.COMPLETED);
+    }
+
+    private class StatsPerTypeRequest extends TmfEventRequest {
+
+        /* Map in which the results are saved */
+        private final Map<@NonNull String, @NonNull Long> stats;
+        private @Nullable ITmfFilter fFilter = null;
+
+        public StatsPerTypeRequest(ITmfTrace trace, TmfTimeRange range) {
+            super(trace.getEventType(), range, 0, ITmfEventRequest.ALL_DATA,
+                    ITmfEventRequest.ExecutionType.BACKGROUND);
+            this.stats = new HashMap<>();
+            
+            if (fConfiguration != null) {
+                try {
+                    String jsonParameters = new Gson().toJson(fConfiguration.getParameters(), Map.class);
+                    String regEx = new Gson().fromJson(jsonParameters, InternalConfiguration.class).getFilter();
+                    if (regEx != null) {
+                        TmfFilterMatchesNode filter = new TmfFilterMatchesNode(null);
+                        filter.setEventAspect(TmfBaseAspects.getEventTypeAspect());
+                        filter.setRegex(regEx);
+                        fFilter = filter;
+                    }
+                } catch (JsonSyntaxException e) {
+                    fFilter = null;
+                }
+            }
+        }
+
+        public Map<@NonNull String, @NonNull Long> getResults() {
+            return stats;
+        }
+
+        @Override
+        public void handleData(final ITmfEvent event) {
+            super.handleData(event);
+            if (event.getTrace() == fTrace) {
+                if (fFilter == null || (fFilter != null && fFilter.matches(event))) {
+                    String eventType = event.getName();
+                    /*
+                     * Special handling for lost events: instead of counting just
+                     * one, we will count how many actual events it represents.
+                     */
+                    if (event instanceof ITmfLostEvent) {
+                        ITmfLostEvent le = (ITmfLostEvent) event;
+                        incrementStats(eventType, le.getNbLostEvents());
+                        return;
+                    }
+
+                    /* For standard event types, just increment by one */
+                    incrementStats(eventType, 1L);
+                }
+            }
+        }
+
+        private void incrementStats(@NonNull String key, long count) {
+            stats.merge(key, count, Long::sum);
+        }
+    }
+
+    @Override
+    public void dispose() {
+        fRequest = null;
+        fCachedResult = null;
+    }
+
+    private static class InternalConfiguration {
+        @Expose
+        @SerializedName(value = "filter")
+        private @Nullable String fFilter = null;
+
+        public @Nullable String getFilter() {
+            return fFilter;
+        }
+    }
+
+}
+
+```
+
+### Implementing a ITmfDataProviderConfigurator with an analysis module
+
+The example below shows configurator for a data provider that doesn't use an analysis module, but it creates the data to return by reading the whole trace. 
 
 
-### Containment versus inheritance
-
-## How to register a data provider factory
 
 
 

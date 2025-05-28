@@ -20,7 +20,8 @@ This example shows how to add a simple analysis module for an LTTng
 kernel trace with two parameters. It also specifies two mandatory events
 by overriding **getAnalysisRequirements**. The analysis requirements are
 further explained in the section
-<a href="#Providing_requirements_to_analyses" class="wikilink"
+
+```java
 title="#Providing requirements to analyses">#Providing requirements to
 analyses</a>.
 
@@ -41,7 +42,7 @@ analyses</a>.
 
         @Override
         protected void canceling() {
-    	     /* The job I am running in is being cancelled, let's clean up */
+             /* The job I am running in is being cancelled, let's clean up */
         }
 
         @Override
@@ -70,6 +71,7 @@ analyses</a>.
         }
 
     }
+```
 
 ### Available base analysis classes and interfaces
 
@@ -82,8 +84,7 @@ also extend the abstract **TmfAbstractAnalysisModule**
   state systems should now use this base class as it also contains all
   the methods to actually create the state sytem with a given backend.
   An example of this kind of analysis module can be found in
-  <a href="#Analysis_module_definition" class="wikilink"
-  title="#Analysis module definition">#Analysis module definition</a>.
+  [Analysis module definition](./Generic-State-System.md/#analysis-module-definition)
 
 The following interfaces can optionally be implemented by analysis
 modules if they use their functionalities. For instance, some utility
@@ -138,6 +139,7 @@ directly the plugin.xml file.
 The following code shows what the resulting plugin.xml file should look
 like.
 
+```xml
     <extension
              point="org.eclipse.linuxtools.tmf.core.analysis">
           <module
@@ -157,6 +159,7 @@ like.
              </tracetype>
           </module>
     </extension>
+```
 
 This defines an analysis module where the *analysis_module* attribute
 corresponds to the module class and must implement IAnalysisModule. This
@@ -215,6 +218,7 @@ Typically, an analysis module can be defined in a core plugin, along
 with some outputs that do not require UI elements. Other outputs, like
 views, who need UI elements, will be defined in a ui plugin.
 
+```xml
     <extension
              point="org.eclipse.linuxtools.tmf.core.analysis">
           <output
@@ -232,6 +236,7 @@ views, who need UI elements, will be defined in a ui plugin.
              </analysisModuleClass>
           </output>
     </extension>
+```
 
 ## Providing help for the module
 
@@ -260,6 +265,7 @@ The following example shows how to have a parameter provider listen to a
 selection in the LTTng kernel Control Flow view and send the thread id
 to the analysis.
 
+```java
     public class MyLttngKernelParameterProvider extends TmfAbstractAnalysisParamProvider {
 
         private ControlFlowEntry fCurrentEntry = null;
@@ -329,6 +335,7 @@ to the analysis.
         }
 
     }
+```
 
 ### Register the parameter provider to the analysis
 
@@ -336,11 +343,13 @@ To have the parameter provider class register to analysis modules, it
 must first register through the analysis manager. It can be done in a
 plugin's activator as follows:
 
+```java
     @Override
     public void start(BundleContext context) throws Exception {
         /* ... */
         TmfAnalysisManager.registerParameterProvider("my.lttng.kernel.analysis.id", MyLttngKernelParameterProvider.class)
     }
+```
 
 where **MyLttngKernelParameterProvider** will be registered to analysis
 *"my.lttng.kernel.analysis.id"*. When the analysis module is created,
@@ -407,6 +416,7 @@ Note that in LTTng event contexts are considered as event fields. Using
 the **TmfAnalysisEventFieldRequirement** it's possible to define
 requirements on event contexts (see 3rd requirement in example below).
 
+```java
         @Override
         public @NonNull Iterable<@NonNull TmfAbstractAnalysisRequirement> getAnalysisRequirements() {
 
@@ -430,6 +440,7 @@ requirements on event contexts (see 3rd requirement in example below).
              Set<TmfAbstractAnalysisRequirement> requirements = ImmutableSet.of(eventsReq1, eventsReq2, eventFieldRequirement);
              return requirements;
         }
+```
 
 ## TODO
 

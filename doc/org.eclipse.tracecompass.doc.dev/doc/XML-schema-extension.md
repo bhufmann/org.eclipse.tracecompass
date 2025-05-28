@@ -14,22 +14,24 @@ the base type *extraType*. Those additional elements are at the root
 level of the XSD, under the *tmfxml* element. The following example
 shows the XSD file for an additional *callstack* element:
 
+```xml
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
-`   `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
         attributeFormDefault="unqualified" elementFormDefault="qualified">
 
-`       `<xs:element name="callstack" substitutionGroup="extra" type="callstackType"/>
+       <xs:element name="callstack" substitutionGroup="extra" type="callstackType"/>
 
-`   `<xs:complexType name="callstackType">  
-`       `<xs:complexContent>  
-`           `<xs:extension base="extraType">  
-`              [... type definition ...]`  
-`           `</xs:extension>  
-`       `</xs:complexContent>  
-`   `</xs:complexType>
+   <xs:complexType name="callstackType">  
+       <xs:complexContent>  
+           <xs:extension base="extraType">  
+              [... type definition ...]  
+           </xs:extension>  
+       </xs:complexContent>  
+   </xs:complexType>
 
-`   `</xs:schema>
+   </xs:schema>
+```
 
 ## Parsing the schema
 
@@ -42,50 +44,54 @@ parser are module helpers.
 The following code snippet shows an example of analysis helper created
 from the *callstack* analysis defined above.
 
-`   public class CallstackXmlSchemaParser implements ITmfXmlSchemaParser {`
+```java
+   public class CallstackXmlSchemaParser implements ITmfXmlSchemaParser {
 
-`       @Override`  
-`       public Collection<? extends IAnalysisModuleHelper> getModuleHelpers(File xmlFile, Document doc) {`  
-`           List`<IAnalysisModuleHelper>` list = new ArrayList<>();`  
-`           NodeList callstackNodes = doc.getElementsByTagName(CallstackXmlStrings.CALLSTACK);`  
-`           for (int i = 0; i < callstackNodes.getLength(); i++) {`  
-`               Element node = NonNullUtils.checkNotNull((Element) callstackNodes.item(i));`
+       @Override  
+       public Collection<? extends IAnalysisModuleHelper> getModuleHelpers(File xmlFile, Document doc) {  
+           List<IAnalysisModuleHelper> list = new ArrayList<>();  
+           NodeList callstackNodes = doc.getElementsByTagName(CallstackXmlStrings.CALLSTACK);  
+           for (int i = 0; i < callstackNodes.getLength(); i++) {  
+               Element node = NonNullUtils.checkNotNull((Element) callstackNodes.item(i));
 
-`               IAnalysisModuleHelper helper = new CallstackXmlModuleHelper(xmlFile, node);`  
-`               list.add(helper);`  
-`           }`  
-`           return list;`  
-`       }`  
-`   }`
+               IAnalysisModuleHelper helper = new CallstackXmlModuleHelper(xmlFile, node);  
+               list.add(helper);  
+           }  
+           return list;  
+       }  
+   }
+```
 
 The *CallstackXmlModuleHelper* created by the parser extends the
 *TmfAnalysisModuleHelperXml* class and overrides the
 *TmfAnalysisModuleHelperXml#createOtherModule* method. The following
 code shows an example of this.
 
-`   public class CallstackXmlModuleHelper extends TmfAnalysisModuleHelperXml {`
+```java
+   public class CallstackXmlModuleHelper extends TmfAnalysisModuleHelperXml {
 
-`       /**`  
-`        * Constructor`  
-`        *`  
-`        * @param xmlFile`  
-`        *            The XML file this element comes from`  
-`        * @param node`  
-`        *            The XML element for this callstack`  
-`        */`  
-`       public CallstackXmlModuleHelper(File xmlFile, Element node) {`  
-`           super(xmlFile, node, XmlAnalysisModuleType.OTHER);`  
-`           // Specific code`  
-`       }`
+       /**  
+        * Constructor  
+        *  
+        * @param xmlFile  
+        *            The XML file this element comes from  
+        * @param node  
+        *            The XML element for this callstack  
+        */  
+       public CallstackXmlModuleHelper(File xmlFile, Element node) {  
+           super(xmlFile, node, XmlAnalysisModuleType.OTHER);  
+           // Specific code  
+       }
 
-`       @Override`  
-`       protected IAnalysisModule createOtherModule(@NonNull String analysisid, @NonNull String name) {`  
-`           IAnalysisModule module = new CallstackXmlAnalysis(...);`  
-`           module.setId(analysisid);`  
-`           module.setName(name);`  
-`           return module;`  
-`       }`  
-`   }`
+       @Override  
+       protected IAnalysisModule createOtherModule(@NonNull String analysisid, @NonNull String name) {  
+           IAnalysisModule module = new CallstackXmlAnalysis(...);  
+           module.setId(analysisid);  
+           module.setName(name);  
+           return module;  
+       }  
+   }
+```
 
 ## Adding the extension point
 
@@ -93,12 +99,14 @@ To advertise this schema extension and parser, an
 **org.eclipse.tracecompass.tmf.analysis.xml.core.xsd** extension must be
 specified for the plugin.
 
-`   `<extension
+```xml
+   <extension
             point="org.eclipse.tracecompass.tmf.analysis.xml.core.xsd">  
-`       `<xsdfile
+       <xsdfile
             file="xsd_files/xmlCallstack.xsd">  
-`       `</xsdfile>  
-`       `<schemaParser
+       </xsdfile>  
+       <schemaParser
              class="my.package.CallstackXmlSchemaParser">  
-`       `</schemaParser>  
-`   `</extension>
+       </schemaParser>  
+   </extension>
+```

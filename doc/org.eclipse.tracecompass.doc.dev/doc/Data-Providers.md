@@ -64,6 +64,7 @@ Here is a simple example of XY data provider, retrieving data from a
 simple state system displaying the child attributes of the root
 attributes.
 
+```java
     import java.util.ArrayList;
     import java.util.Collection;
     import java.util.Collections;
@@ -106,7 +107,7 @@ attributes.
     /**
      * An example of an XY data provider.
      *
-     * @author Geneviève Bastien
+     * @author Geneviï¿½ve Bastien
      */
     @SuppressWarnings("restriction")
     @NonNullByDefault
@@ -239,6 +240,7 @@ attributes.
         }
 
     }
+```
 
 ### Time Graph
 
@@ -271,6 +273,7 @@ Here is a simple example of a time graph data provider, retrieving data
 from a simple state system where each root attribute is to be displayed.
 It also provides simple styling.
 
+```java
     import java.util.ArrayList;
     import java.util.Collection;
     import java.util.Collections;
@@ -326,7 +329,7 @@ It also provides simple styling.
     /**
      * An example of a time graph data provider.
      *
-     * @author Geneviève Bastien
+     * @author Geneviï¿½ve Bastien
      */
     @SuppressWarnings("restriction")
     @NonNullByDefault
@@ -541,6 +544,7 @@ It also provides simple styling.
         }
 
     }
+```
 
 ## Data provider management
 
@@ -558,6 +562,7 @@ providers, to create the data provider instances for a trace. Here is an
 example of factory class to create the time graph data provider of the
 previous section.
 
+```java
     import java.util.Collection;
     import java.util.Collections;
 
@@ -581,7 +586,7 @@ previous section.
      * This factory is also in the developer documentation of Trace Compass. If it is
      * modified here, the doc should also be updated.
      *
-     * @author Geneviève Bastien
+     * @author Geneviï¿½ve Bastien
      */
     @SuppressWarnings("restriction")
     public class ExampleTimeGraphProviderFactory implements IDataProviderFactory {
@@ -609,11 +614,13 @@ previous section.
         }
 
     }
+```
 
 ### Extension point
 
 This extension needs to be added to the plugin's plugin.xml file:
 
+```xml
     <extension point="org.eclipse.tracecompass.tmf.core.dataprovider">
         <dataProviderFactory
              class="org.eclipse.tracecompass.examples.core.data.provider.ExampleTimeGraphProviderFactory"
@@ -624,6 +631,7 @@ This extension needs to be added to the plugin's plugin.xml file:
              id="org.eclipse.tracecompass.examples.xy.dataprovider">
         </dataProviderFactory>
     </extension>
+```
 
 ### Experiments
 
@@ -669,6 +677,7 @@ chart itself can extend **AbstractSelectTreeViewer**.
 Out of the box, it supports experiments, updating during the trace
 analysis, Pin & Clone and a number of chart viewer features.
 
+```java
     import java.util.Comparator;
     import java.util.Objects;
 
@@ -691,7 +700,7 @@ analysis, Pin & Clone and a number of chart viewer features.
     /**
      * An example of a data provider XY view
      *
-     * @author Geneviève Bastien
+     * @author Geneviï¿½ve Bastien
      */
     public class ExampleXYDataProviderView extends TmfChartView {
 
@@ -729,6 +738,7 @@ analysis, Pin & Clone and a number of chart viewer features.
             return new TreeXyViewer(Objects.requireNonNull(parent));
         }
     }
+```
 
 ### Time Graph Views
 
@@ -746,6 +756,7 @@ the view. It can extend **TimeGraphPresentationProvider**.
 Here is the simplest implementation of the time graph view using a data
 provider:
 
+```java
     import org.eclipse.tracecompass.examples.core.data.provider.ExampleTimeGraphDataProvider;
     import org.eclipse.tracecompass.internal.provisional.tmf.ui.widgets.timegraph.BaseDataProviderTimeGraphPresentationProvider;
     import org.eclipse.tracecompass.tmf.ui.views.timegraph.BaseDataProviderTimeGraphView;
@@ -753,7 +764,7 @@ provider:
     /**
      * An example of a data provider time graph view
      *
-     * @author Geneviève Bastien
+     * @author Geneviï¿½ve Bastien
      */
     @SuppressWarnings("restriction")
     public class ExampleTimeGraphDataProviderView extends BaseDataProviderTimeGraphView {
@@ -769,3 +780,4 @@ provider:
         }
 
     }
+```

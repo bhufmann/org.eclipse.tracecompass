@@ -11,7 +11,9 @@ instructions on how to enable logging and obtain traces.
 
 Each class should define and use their own static logger like this:
 
-`   private static final Logger LOGGER = TraceCompassLog.getLogger(StateSystem.class);`
+```java
+    private static final Logger LOGGER = TraceCompassLog.getLogger(StateSystem.class);
+```
 
 It is then easy to filter the components to log by their full class
 name. The *TraceCompassLog#getLogger* method is a wrapper for
@@ -48,7 +50,9 @@ string concatenation when the statement is not logged, java provides
 method taking a *Supplier<String>* as argument and that method should be
 used for all logging statements
 
-`   LOGGER.info(() -> "[Component:Action] param1=" + myParam1 + ", param2=" + myParam2);`
+```java
+    LOGGER.info(() -> "[Component:Action] param1=" + myParam1 + ", param2=" + myParam2);
+```
 
 ### Choose the appropriate log level
 
@@ -79,7 +83,9 @@ format that can then be associated with a trace type.
 Third party plugins provide a custom trace parser and LTTng trace type
 for JUL statements that use the following format
 
-`   [EventName:MayContainSemiColon] paramName1=paramValue1, paramName2=paramValue2`
+```
+    [EventName:MayContainSemiColon] paramName1=paramValue1, paramName2=paramValue2
+```
 
 ### Logging to populate Callstacks and Callgraph analyses
 
@@ -87,15 +93,19 @@ In order to log data in a way that the call stack analysis has enough
 information to display, use the TraceCompassLogUtils#ScopeLog. It is an
 auto-closable logger that will log a try-with-resources block of code.
 
-`       try (TraceCompassLogUtils.ScopeLog linksLogger = new TraceCompassLogUtils.ScopeLog(LOGGER, Level.CONFIG, "Perform Query")) { //$NON-NLS-1$`  
-`          // Do something`  
-`          new Object();`  
-`      }`
+```java
+       try (TraceCompassLogUtils.ScopeLog linksLogger = new TraceCompassLogUtils.ScopeLog(LOGGER, Level.CONFIG, "Perform Query")) { //$NON-NLS-1$
+          // Do something
+          new Object();
+      }`
+```
 
 The resulting trace will have the following fields
 
-`      INFO: {"ts":12345,"ph":"B",tid:1,"name:Perform Query"}`  
-`      INFO: {"ts":"12366,"ph":"E","tid":1}`
+```
+      INFO: {"ts":12345,"ph":"B",tid:1,"name:Perform Query"}
+      INFO: {"ts":"12366,"ph":"E","tid":1}
+```
 
 ### Logging to track Object life cycles
 

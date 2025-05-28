@@ -145,6 +145,7 @@ ByteBuffer packet) constructor. The parameters are:
 
 The following class is obtained:
 
+```java
     package org.eclipse.tracecompass.pcap.core.protocol.udp;
 
     import java.nio.ByteBuffer;
@@ -254,6 +255,7 @@ The following class is obtained:
         }
 
     }
+```
 
 Now, we implement the constructor. It is done in four steps:
 
@@ -274,6 +276,7 @@ Now, we implement the constructor. It is done in four steps:
 
 The following constructor is obtained:
 
+```java
         public UDPPacket(PcapFile file, @Nullable Packet parent, ByteBuffer packet) throws BadPacketException {
             super(file, parent, Protocol.UDP);
 
@@ -309,6 +312,7 @@ The following constructor is obtained:
             fChildPacket = findChildPacket();
 
         }
+```
 
 Then, we implement the following methods:
 
@@ -341,6 +345,7 @@ Then, we implement the following methods:
 
 We get the following code:
 
+```java
         @Override
         public @Nullable Packet getChildPacket() {
             return fChildPacket;
@@ -513,6 +518,7 @@ We get the following code:
             }
             return true;
         }
+```
 
 The UDPPacket class is implemented. We now have the define the
 UDPEndpoint.
@@ -534,6 +540,7 @@ ExampleEndpoint(Packet packet, boolean isSourceEndpoint):
 
 We obtain the following unimplemented class:
 
+```java
     package org.eclipse.tracecompass.pcap.core.protocol.udp;
 
     import org.eclipse.tracecompass.internal.pcap.core.endpoint.ProtocolEndpoint;
@@ -567,11 +574,13 @@ We obtain the following unimplemented class:
         }
 
     }
+```
 
 For the constructor, we simply initialize fPort. If isSourceEndpoint is
 true, then we take packet.getSourcePort(), else we take
 packet.getDestinationPort().
 
+```java
         /**
          * Constructor of the {@link UDPEndpoint} class. It takes a packet to get
          * its endpoint. Since every packet has two endpoints (source and
@@ -588,6 +597,7 @@ packet.getDestinationPort().
             super(packet, isSourceEndpoint);
             fPort = isSourceEndpoint ? packet.getSourcePort() : packet.getDestinationPort();
         }
+```
 
 Then we implement the methods:
 
@@ -605,6 +615,7 @@ Then we implement the methods:
 
 <!-- -->
 
+```java
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -654,6 +665,7 @@ Then we implement the methods:
             }
             return endpoint.toString() + '/' + fPort;
         }
+```
 
 ### Registering the UDP protocol
 
@@ -674,7 +686,9 @@ Simply add the protocol name here, along with a few arguments:
 
 Thus, the following line is added in the PcapProtocol enum:
 
+```java
         UDP("User Datagram Protocol", "udp", Layer.LAYER_4, true),
+```
 
 Also, TMF has to know about the new protocol. This is defined in
 org.eclipse.tracecompass.internal.tmf.pcap.core.protocol.TmfPcapProtocol.
@@ -682,18 +696,24 @@ We simply add it, with a reference to the corresponding protocol in
 PcapProtocol. Thus, the following line is added in the TmfPcapProtocol
 enum:
 
+```java
         UDP(PcapProtocol.UDP),
+```
 
 You will also have to update the *ProtocolConversion* class to register
 the protocol in the switch statements. Thus, for UDP, we add:
 
+```java
         case UDP:
             return TmfPcapProtocol.UDP;
+```
 
 and
 
+```java
         case UDP:
             return PcapProtocol.UDP;
+```
 
 Finally, all the protocols that could be the parent of the new protocol
 (in our case, IPv4 and IPv6) have to be notified of the new protocol.
@@ -702,6 +722,7 @@ class of those protocols. For instance, in IPv4Packet, we add a case in
 the switch statement of findChildPacket, if the Protocol number matches
 UDP's protocol number at the network layer:
 
+```java
         @Override
         protected @Nullable Packet findChildPacket() throws BadPacketException {
             ByteBuffer payload = fPayload;
@@ -718,6 +739,7 @@ UDP's protocol number at the network layer:
                 return new UnknownPacket(getPcapFile(), this, payload);
             }
         }
+```
 
 The new protocol has been added. Running TMF should work just fine, and
 the new protocol is now recognized.

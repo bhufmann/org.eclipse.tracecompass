@@ -25,19 +25,21 @@ diagram.
 Sequence Diagram loader.  
 **Configuration Markup**:  
 
+```
     <!ELEMENT extension (uml2SDLoader)+>
     <!ATTLIST extension
     point CDATA #REQUIRED
     id    CDATA #IMPLIED
     name  CDATA #IMPLIED
     >
+```
 
 - point - A fully qualified identifier of the target extension point.
 - id - An optional identifier of the extension instance.
 - name - An optional name of the extension instance.
 
 <!-- -->
-
+```
     <!ELEMENT uml2SDLoader EMPTY>
     <!ATTLIST uml2SDLoader
     id      CDATA #REQUIRED
@@ -45,6 +47,7 @@ Sequence Diagram loader.
     class   CDATA #REQUIRED
     view    CDATA #REQUIRED
     default (true | false)
+```
 
 - id - A unique identifier for this uml2SDLoader. This is not mandatory
   as long as the id attribute cannot be retrieved by the provider
@@ -73,10 +76,7 @@ specify which loader should be used when opening the view. For example,
 an eclipse action or command could be used for that. This additional
 code is not necessary if there is only one loader for a given Sequence
 Diagram View associated and this loader has the attribute "default" set
-to "true". (see also
-<a href="#Using_one_Sequence_Diagram_View_with_Multiple_Loaders"
-class="wikilink"
-title=" Using one Sequence Diagram View with Multiple Loaders"> Using
+to "true". (see also [Using one Sequence Diagram View with Multiple Loaders](#using-one-sequence-diagram-view-with-multiple-loaders)
 one Sequence Diagram View with Multiple Loaders</a>)
 
 ## Sequence Diagram View
@@ -129,10 +129,7 @@ it.
 - SHIFT+ALT+ARROW-END - to jump to the end of the selected message if
   not already visible in page
 - CTRL+F - to open find dialog if either the basic or extended find
-  provider is defined (see
-  <a href="#Using_the_Find_Provider_Interface" class="wikilink"
-  title=" Using the Find Provider Interface"> Using the Find Provider
-  Interface</a>)
+  provider is defined (see [Using the Find Provider Interface](#using-the-find-provider-interface)
 - CTRL+P - to open print dialog
 
 ### Preferences
@@ -271,6 +268,7 @@ Next is to implement the methods of the IUml2SDLoader interface method.
 The following code snippet shows how to create the major sequence
 diagram elements. Please note that no time information is stored.  
 
+```java
     package org.eclipse.tracecompass.tmf.sample.ui;
 
     import org.eclipse.tracecompass.tmf.ui.views.uml2sd.SDView;
@@ -433,6 +431,7 @@ diagram elements. Please note that no time information is stored.
             fSdView.setFrame(testFrame);
         }
     }
+```
 
 Now it's time to run the example application. To launch the Example
 Application select the *Overview* tab and click on **Launch an Eclipse
@@ -448,6 +447,7 @@ each message *SyncMessage* since start and end time are the same. For
 each *AsyncMessage* set start and end time separately by using methods
 *setStartTime* and *setEndTime*. For example:  
 
+```java
         private void createFrame() {
             //...
             start.setTime(TmfTimestamp.create(1000, -3));
@@ -459,6 +459,7 @@ each *AsyncMessage* set start and end time separately by using methods
             asynReturn1.setEndTime(TmfTimestamp.create(1070, -3));
             //...
         }
+java
 
 When running the example application, a time compression bar on the left
 appears which indicates the time elapsed between consecutive events. The
@@ -521,6 +522,7 @@ Diagram View. This will be done in the *setViewer()* method of the
 loader class. Lastly, the paging provider has to be removed from the
 view, when the *dispose()* method of the loader class is called.
 
+```java
     public class SampleLoader implements IUml2SDLoader, ISDPagingProvider {
         //...
         private int page = 0;
@@ -604,6 +606,7 @@ view, when the *dispose()* method of the loader class is called.
         }
         //...
     }
+```
 
 When running the example application, new actions will be shown in the
 coolbar and the coolbar menu.  
@@ -641,6 +644,7 @@ note that only search for lifelines and SynchMessage are supported. The
 find itself will always find only the first occurrence the pattern to
 match.
 
+```java
     public class SampleLoader implements IUml2SDLoader, ISDPagingProvider, ISDFindProvider {
 
         //...
@@ -711,6 +715,7 @@ match.
         }
         //...
     }
+```
 
 When running the example application, the find action will be shown in
 the coolbar and the coolbar menu.  
@@ -744,6 +749,7 @@ methods (*isNodeSupported()* and *getNodeName()*) have to be
 implemented, too.  
 Note that no example implementation of *filter()* is provided.  
 
+```java
     public class SampleLoader implements IUml2SDLoader, ISDPagingProvider, ISDFindProvider, ISDFilterProvider {
 
         //...
@@ -769,6 +775,7 @@ Note that no example implementation of *filter()* is provided.
         }
         //...
     }
+```
 
 When running the example application, the filter action will be shown in
 the coolbar menu.  
@@ -802,6 +809,7 @@ implement the method *supplementCoolbarContent()* and set the provider
 in the *setViewer()* method as well as remove the provider in the
 *dispose()* method of the loader class.  
 
+```java
     public class SampleLoader implements IUml2SDLoader, ISDPagingProvider, ISDFindProvider, ISDFilterProvider, ISDExtendedActionBarProvider {
         //...
         
@@ -835,6 +843,7 @@ in the *setViewer()* method as well as remove the provider in the
         }
         //...
     }
+```
 
 When running the example application, all new actions will be added to
 the coolbar and coolbar menu according to the implementation of
@@ -864,9 +873,9 @@ loader class. Please note that no example is provided here.
 Please refer to the following Eclipse articles for more information
 about properties and tabed properties.
 
-- [\| Take control of your
+- [Take control of your
   properties](http://www.eclipse.org/articles/Article-Properties-View/properties-view.html)
-- [\| The Eclipse Tabbed Properties
+- [The Eclipse Tabbed Properties
   View](http://www.eclipse.org/articles/Article-Tabbed-Properties/tabbed_properties_view.html)
 
 #### Using the Collapse Provider Interface

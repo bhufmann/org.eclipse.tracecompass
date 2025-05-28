@@ -29,68 +29,70 @@ implementing **IOsExecutionGraphHandlerBuilder**, to build the handler.
 The **handleEvent** method is the one to override in the event handler.
 The following code snippet show an example class to extend the graph:
 
-`   public class PThreadLockGraphHandler extends AbstractTraceEventHandler {`
+```java
+   public class PThreadLockGraphHandler extends AbstractTraceEventHandler {
 
-`       /**`  
-`        * Constructor`  
-`        *`  
-`        * @param provider`  
-`        *            The graph provider`  
-`        * @param priority`  
-`        *            The priority of this handler`  
-`        */`  
-`       public PThreadLockGraphHandler(OsExecutionGraphProvider provider, int priority) {`  
-`           super(priority);`  
-`           fProvider = provider;`  
-`           fLastRequest = HashBasedTable.create();`  
-`       }`
+       /**  
+        * Constructor  
+        *  
+        * @param provider  
+        *            The graph provider  
+        * @param priority  
+        *            The priority of this handler  
+        */  
+       public PThreadLockGraphHandler(OsExecutionGraphProvider provider, int priority) {  
+           super(priority);  
+           fProvider = provider;  
+           fLastRequest = HashBasedTable.create();  
+       }
 
-`       /**`  
-`        * The handler builder for the event context handler`  
-`        */`  
-`       public static class HandlerBuilderPThreadLock implements IOsExecutionGraphHandlerBuilder {`
+       /**  
+        * The handler builder for the event context handler  
+        */  
+       public static class HandlerBuilderPThreadLock implements IOsExecutionGraphHandlerBuilder {
 
-`           @Override`  
-`           public ITraceEventHandler createHandler(@NonNull OsExecutionGraphProvider provider, int priority) {`  
-`               return new PThreadLockGraphHandler(provider, priority);`  
-`           }`  
-`       }`
+           @Override  
+           public ITraceEventHandler createHandler(@NonNull OsExecutionGraphProvider provider, int priority) {  
+               return new PThreadLockGraphHandler(provider, priority);  
+           }  
+       }
 
-`       private OsWorker getOrCreateKernelWorker(ITmfEvent event, Integer tid) {`  
-`           HostThread ht = new HostThread(event.getTrace().getHostId(), tid);`  
-`           OsWorker worker = fProvider.getSystem().findWorker(ht);`  
-`           if (worker != null) {`  
-`               return worker;`  
-`           }`  
-`           worker = new OsWorker(ht, "kernel/" + tid, event.getTimestamp().getValue()); //$NON-NLS-1$`  
-`           worker.setStatus(ProcessStatus.RUN);`  
-`           fProvider.getSystem().addWorker(worker);`  
-`           return worker;`  
-`       }`
+       private OsWorker getOrCreateKernelWorker(ITmfEvent event, Integer tid) {  
+           HostThread ht = new HostThread(event.getTrace().getHostId(), tid);  
+           OsWorker worker = fProvider.getSystem().findWorker(ht);  
+           if (worker != null) {  
+               return worker;  
+           }  
+           worker = new OsWorker(ht, "kernel/" + tid, event.getTimestamp().getValue()); //$NON-NLS-1$  
+           worker.setStatus(ProcessStatus.RUN);  
+           fProvider.getSystem().addWorker(worker);  
+           return worker;  
+       }
 
-`       @Override`  
-`       public void handleEvent(ITmfEvent event) {`  
-`           String name = event.getName();`  
-`           if ("myevent".equals(name)) {`  
-`               // Get the TID and corresponding worker`  
-`               Integer tid = TmfTraceUtils.resolveIntEventAspectOfClassForEvent(event.getTrace(), LinuxTidAspect.class, event);`  
-`               if (tid == null) {`  
-`                   return;`  
-`               }`  
-`               OsWorker worker = getOrCreateKernelWorker(event, tid);`  
-`               // Get the graph to update`  
-`               TmfGraph graph = fProvider.getAssignedGraph();`  
-`               // Create a new vertex at the time of the event to add to the graph`  
-`               TmfVertex vertex = new TmfVertex(event.getTimestamp().toNanos());`  
-`               // The following code shows different possibilities for the graph`  
-`               // Append the vertex to the worker and create an horizontal edge of a specific type`  
-`               graph.append(worker, vertex, EdgeType.BLOCKED);`  
-`               // To create a relation between 2 workers, one needs another vertex`  
-`               // TmfVertex otherVertex = getOriginVertexForThisEvent([...]);`  
-`               // otherVertex.linkVertical(vertex);`  
-`           }`  
-`       }`  
-`   }`
+       @Override  
+       public void handleEvent(ITmfEvent event) {  
+           String name = event.getName();  
+           if ("myevent".equals(name)) {  
+               // Get the TID and corresponding worker  
+               Integer tid = TmfTraceUtils.resolveIntEventAspectOfClassForEvent(event.getTrace(), LinuxTidAspect.class, event);  
+               if (tid == null) {  
+                   return;  
+               }  
+               OsWorker worker = getOrCreateKernelWorker(event, tid);  
+               // Get the graph to update  
+               TmfGraph graph = fProvider.getAssignedGraph();  
+               // Create a new vertex at the time of the event to add to the graph  
+               TmfVertex vertex = new TmfVertex(event.getTimestamp().toNanos());  
+               // The following code shows different possibilities for the graph  
+               // Append the vertex to the worker and create an horizontal edge of a specific type  
+               graph.append(worker, vertex, EdgeType.BLOCKED);  
+               // To create a relation between 2 workers, one needs another vertex  
+               // TmfVertex otherVertex = getOriginVertexForThisEvent([...]);  
+               // otherVertex.linkVertical(vertex);  
+           }  
+       }  
+   }
+```
 
 This class typically has all the logic it needs to retrieve information
 on the relations between threads. It will create vertices at any
@@ -107,13 +109,15 @@ otherwise, it may add vertices at times earlier than the last vertex.
 To advertise this extension to the execution graph, the following
 extension should be added in the plugin:
 
-`   `<extension
+```xml
+   <extension
          point="org.eclipse.tracecompass.analysis.os.linux.core.graph.handler">  
-`       `<handler
+       <handler
            class="org.eclipse.tracecompass.incubator.internal.lttng2.ust.extras.core.pthread.PThreadLockGraphHandler$HandlerBuilderPThreadLock"
             priority="10">  
-`       `</handler>  
-`   `</extension>
+       </handler>  
+   </extension>
+```
 
 The *class* attribute links to the handler builder class and the
 *priority* attribute indicates at which priority the handler will be

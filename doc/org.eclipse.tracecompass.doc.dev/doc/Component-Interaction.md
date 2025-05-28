@@ -17,14 +17,18 @@ passed as argument to the signal manager to be dispatched. Every
 component that can handle the signal will receive it. The receivers do
 not need to be known by the sender.
 
+```java
     TmfExampleSignal signal = new TmfExampleSignal(this, ...);
     TmfSignalManager.dispatchSignal(signal);
+```
 
 If the sender is an instance of the class TmfComponent, the broadcast
 method can be used:
 
-    TmfExampleSignal signal = new TmfExampleSignal(this, ...);
+```java
+    TmfExampleSignal signal = new TmfExampleSignal(this, /*...*/);
     broadcast(signal);
+```
 
 ## Receiving Signals
 
@@ -32,8 +36,10 @@ In order to receive any signal, the receiver must first be registered
 with the signal manager. The receiver can register as a normal or VIP
 receiver.
 
+```java
     TmfSignalManager.register(this);
     TmfSignalManager.registerVIP(this);
+```
 
 If the receiver is an instance of the class TmfComponent, it is
 automatically registered as a normal receiver in the constructor.
@@ -41,17 +47,21 @@ automatically registered as a normal receiver in the constructor.
 When the receiver is destroyed or disposed, it should deregister itself
 from the signal manager.
 
+```java
     TmfSignalManager.deregister(this);
+```
 
 To actually receive and handle any specific signal, the receiver must
 use the @TmfSignalHandler annotation and implement a method that will be
 called when the signal is broadcast. The name of the method is
 irrelevant.
 
+```java
     @TmfSignalHandler
     public void example(TmfExampleSignal signal) {
         ...
     }
+```
 
 The source of the signal can be used, if necessary, by a component to
 filter out and ignore a signal that was broadcast by itself when the
@@ -68,17 +78,23 @@ that are preempted by a newer signal within the delay are discarded.
 
 The signal throttler must first be initialized:
 
+```java
     final int delay = 100; // in ms
     TmfSignalThrottler throttler = new TmfSignalThrottler(this, delay);
+```
 
 Then the sending of signals should be queued through the throttler:
 
+```java
     TmfExampleSignal signal = new TmfExampleSignal(this, ...);
     throttler.queue(signal);
+```
 
 When the throttler is no longer needed, it should be disposed:
 
+```java
     throttler.dispose();
+```
 
 ## Ignoring inbound/outbound signals
 
@@ -86,11 +102,15 @@ It is possible to stop certain signals from being sent or received.
 
 To block all incoming signals to an object:
 
-        TmfSignalManager.addIgnoredInboundSignal(objectInstance, TmfSignal.class);
+```java
+    TmfSignalManager.addIgnoredInboundSignal(objectInstance, TmfSignal.class);
+```
 
 To block all outgoing signals originating from an object:
 
-        TmfSignalManager.addIgnoredOutboundSignal(objectInstance, TmfSignal.class);
+```java
+    TmfSignalManager.addIgnoredOutboundSignal(objectInstance, TmfSignal.class);
+```
 
 The blocked signal filtering is based on type hierarchy. Blocking
 `TmfSignal.class` will result in blocking all signals derived from
@@ -99,10 +119,12 @@ this type and derived signals from `TmfTraceSelectedSignal`
 
 To remove an ignore rule or clear them all:
 
-        TmfSignalManager.removeIgnoredOutboundSignal(Object source, Class<? extends TmfSignal> signal)
-        TmfSignalManager.removeIgnoredInboundSignal(Object listener, Class<? extends TmfSignal> signal)
-        TmfSignalManager.clearIgnoredOutboundSignalList(Object source)
-        TmfSignalManager.clearIgnoredInboundSignalList(Object listener)
+```java
+    TmfSignalManager.removeIgnoredOutboundSignal(Object source, Class<? extends TmfSignal> signal)
+    TmfSignalManager.removeIgnoredInboundSignal(Object listener, Class<? extends TmfSignal> signal)
+    TmfSignalManager.clearIgnoredOutboundSignalList(Object source)
+    TmfSignalManager.clearIgnoredInboundSignalList(Object listener)
+```
 
 ## Signal Reference
 
@@ -451,4 +473,3 @@ the **signal** item.
 
 All signals sent and received will be logged to the file TmfTrace.log
 located in the Eclipse home directory.
-

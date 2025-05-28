@@ -84,6 +84,7 @@ to every single attribute with its path in the tree.
 For example, in the attribute tree for Linux kernel traces, we use the
 following attributes, among others:
 
+```
     |- Processes
     |    |- 1000
     |    |   |- PPID
@@ -97,6 +98,7 @@ following attributes, among others:
          |  |- Status
          |  |- Current_pid
         ...
+```
 
 In this model, the attribute "Processes/1000/PPID" refers to the PPID of
 process with PID 1000. The attribute "CPUs/0/Status" represents the
@@ -296,9 +298,7 @@ type to build a state system with this provider during its
 initialization. This consists of overriding TmfTrace#buildStateSystems()
 and in there of calling the method in TmfStateSystemFactory that
 corresponds to the storage backend you want to use (see the section
-<a href="#Comparison_of_state_system_backends" class="wikilink"
-title="#Comparison of state system backends">#Comparison of state system
-backends</a>).
+[Comparison of state system backends](#comparison-of-state-system-backends)
 
 You will have to pass in parameter the state provider you want to use,
 which you should have defined already. Each backend can also ask for
@@ -519,8 +519,7 @@ the components are closed.
 ## Comparison of state system backends
 
 As we have seen in section
-<a href="#High-level_components" class="wikilink"
-title="#High-level components">#High-level components</a>, the state
+[High-level components](#high-level-components) the state
 system needs a storage backend to save the intervals. Different
 implementations are available when building your state system from
 TmfStateSystemFactory.
@@ -611,11 +610,9 @@ values (int, long or double).
 
 The speed of these operations can be greatly improved for large data
 sets if the attribute was inserted in the state system as a mipmap
-attribute. Refer to the
-<a href="#Mipmap_feature" class="wikilink" title=" Mipmap feature">
-Mipmap feature</a> section.
+attribute. Refer to the [Mipmap feature](#mipmap-feature)
 
-##### queryRangeMax()
+### queryRangeMax()
 
 This method returns the maximum numerical value of an attribute in the
 specified time range. The attribute must be of type int, long or double.
@@ -623,7 +620,7 @@ Null values are ignored. The returned value will be of the same state
 value type as the base attribute, or a null value if there is no state
 interval stored in the given time range.
 
-##### queryRangeMin()
+### queryRangeMin()
 
 This method returns the minimum numerical value of an attribute in the
 specified time range. The attribute must be of type int, long or double.
@@ -631,7 +628,7 @@ Null values are ignored. The returned value will be of the same state
 value type as the base attribute, or a null value if there is no state
 interval stored in the given time range.
 
-##### queryRangeAverage()
+### queryRangeAverage()
 
 This method returns the average numerical value of an attribute in the
 specified time range. The attribute must be of type int, long or double.
@@ -650,6 +647,7 @@ associated CPU should be set to "running" or "idle".
 
 We will use an attribute tree that looks like this:
 
+```
     CPUs
      |--0
      |  |--Status
@@ -660,6 +658,7 @@ We will use an attribute tree that looks like this:
      |  2
      |  |--Status
     ...
+```
 
 The second-level attributes will be named from the information available
 in the trace events. Only the "Status" attributes will carry a state
@@ -677,6 +676,7 @@ state system.
 
 ### State Provider
 
+```java
     import java.util.Objects;
 
     import org.eclipse.jdt.annotation.NonNull;
@@ -692,7 +692,7 @@ state system.
      * An example of a simple state provider for a simple state system analysis
      *
      * @author Alexandre Montplaisir
-     * @author Geneviève Bastien
+     * @author Geneviï¿½ve Bastien
      */
     public class ExampleStateProvider extends AbstractTmfStateProvider {
 
@@ -749,9 +749,11 @@ state system.
         }
 
     }
+```
 
 ### Analysis module definition
 
+```java
     import java.util.Objects;
 
     import org.eclipse.jdt.annotation.NonNull;
@@ -761,7 +763,7 @@ state system.
     /**
      * An example of a simple state system analysis module.
      *
-     * @author Geneviève Bastien
+     * @author Geneviï¿½ve Bastien
      */
     public class ExampleStateSystemAnalysisModule extends TmfStateSystemAnalysisModule {
 
@@ -776,6 +778,7 @@ state system.
         }
 
     }
+```
 
 ## Mipmap feature
 
@@ -791,8 +794,7 @@ value (int, long or double). An attribute can be mipmapped for one or
 more of the features at the same time.
 
 To use a mipmapped attribute in queries, call the corresponding methods
-of the static class <a href="#State_System_Operations" class="wikilink"
-title=" TmfStateSystemOperations"> TmfStateSystemOperations</a>.
+of the static class [State System Opereations](#state-system-operations)
 
 ### AbstractTmfMipmapStateProvider
 
@@ -804,7 +806,7 @@ If a provider wants to add mipmapped attributes to its tree, it must
 extend AbstractTmfMipmapStateProvider and call modifyMipmapAttribute()
 in the event handler, specifying one or more mipmap features to compute.
 Then the structure of the attribute tree will be:
-
+```
     |- <attribute>
     |   |- <mipmapFeature> (min/max/avg)
     |   |   |- 1
@@ -819,3 +821,4 @@ Then the structure of the attribute tree will be:
     |   |  ...
     |   |   |- n (maximum mipmap level)
     |  ...
+```

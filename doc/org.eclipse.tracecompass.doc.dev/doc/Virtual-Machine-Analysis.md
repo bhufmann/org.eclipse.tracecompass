@@ -7,5 +7,5 @@ are now available as part of the "Virtual Machine And Container
 Analysis" feature of the Incubator.
 
 Please refer to [the incubator development
-documentation](https://wiki.eclipse.org/Trace_Compass/Incubator_Guidelines)
+documentation](https://github.com/eclipse-tracecompass-incubator/org.eclipse.tracecompass.incubator/blob/master/CONTRIBUTING.md)
 for how to contribute to the Incubator.

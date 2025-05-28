@@ -43,6 +43,7 @@ for later use.
 Here is an example of how to use the test framework in a performance
 test:
 
+```java
     public class AnalysisBenchmark {
 
         private static final String TEST_ID = "org.eclipse.linuxtools#LTTng kernel analysis";
@@ -100,13 +101,13 @@ test:
             pm.commit();
         }
     }
+```
 
 For more information, see [The Eclipse Performance Test
 How-to](http://wiki.eclipse.org/Performance/Automated_Tests)
 
 Some rules to help write performance tests are explained in section
-<a href="#ABC_of_performance_testing" class="wikilink"
-title=" ABC of performance testing"> ABC of performance testing</a>.
+[ABC of performance testing](#abc-of-performance-testing)
 
 ### Run a performance test
 
@@ -145,21 +146,23 @@ configuration to store results on a derby database located on a server.
 Note that to store results in a derby database, the *org.apache.derby*
 plug-in must be available within your Eclipse. Since it is an optional
 dependency, it is not included in the target definition. It can be
-installed via the **Orbit** repository, in *Help* -\> *Install new
+installed via the **Orbit** repository, in *Help* -> *Install new
 software...*. If the **Orbit** repository is not listed, click on the
 latest one from [1](http://download.eclipse.org/tools/orbit/downloads/)
 and copy the link under *Orbit Build Repository*.
 
 To store the data to a database, it needs to be configured in the run
-configuration. In *Run* -\> *Run configurations..*, under *Junit Plug-in
+configuration. In *Run* -> *Run configurations..*, under *Junit Plug-in
 Test*, find the run configuration that corresponds to the test you wish
 to run, or create one if it is not present yet.
 
 In the *Arguments* tab, in the box under *VM Arguments*, add on separate
 lines the following information
 
+```
     -Declipse.perf.dbloc=//javaderby.dorsal.polymtl.ca
     -Declipse.perf.config=build=mybuild;host=myhost;config=linux;jvm=1.7
+```
 
 The *eclipse.perf.dbloc* parameter is the url (or filename) of the derby
 database. The database is by default named *perfDB*, with username and

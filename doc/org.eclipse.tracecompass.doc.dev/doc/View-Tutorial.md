@@ -67,6 +67,7 @@ pinning and it has support for signal handling between components.
 This will generate an empty class. Once the quick fixes are applied, the
 following code is obtained:
 
+```java
     package org.eclipse.tracecompass.tmf.sample.ui;
 
     import org.eclipse.swt.widgets.Composite;
@@ -92,6 +93,7 @@ following code is obtained:
         }
 
     }
+```
 
 This creates an empty view, however the basic structure is now is place.
 
@@ -106,6 +108,7 @@ pleasing by adjusting the range and formating the time stamps.
 First, we can add an empty chart to the view and initialize some of its
 components.
 
+```java
         private static final String SERIES_NAME = "Series";
         private static final String Y_AXIS_TITLE = "Signal";
         private static final String X_AXIS_TITLE = "Time";
@@ -142,6 +145,7 @@ A new Eclipse application window will show. In the new window go to
 ![](images/ShowViewOther.png "images/ShowViewOther.png")  
 You should now see a view containing an empty chart  
 ![](images/EmptySampleView.png "images/EmptySampleView.png")  
+```
 
 #### Signal Handling
 
@@ -159,6 +163,7 @@ this, we can use a signal hander which is specified with the
 Then we need to actually gather data from the trace. This is done
 asynchronously using a *TmfEventRequest*
 
+```java
         @TmfSignalHandler
         public void traceSelected(final TmfTraceSelectedSignal signal) {
             // Don't populate the view again if we're already showing this trace
@@ -194,6 +199,7 @@ asynchronously using a *TmfEventRequest*
             ITmfTrace trace = signal.getTrace();
             trace.sendRequest(req);
         }
+```
 
 #### Transferring Data to the Chart
 
@@ -202,6 +208,7 @@ To provide that, we can accumulate each event's time and value in their
 respective list then convert the list to arrays when all events are
 processed.
 
+```java
             TmfEventRequest req = new TmfEventRequest(TmfEvent.class,
                     TmfTimeRange.ETERNITY, 0, ITmfEventRequest.ALL_DATA,
                     ITmfEventRequest.ExecutionType.BACKGROUND) {
@@ -254,6 +261,7 @@ processed.
                     return d;
                 }
             };
+```
 
 #### Adjusting the Range
 
@@ -261,7 +269,7 @@ The chart now contains values but they might be out of range and not
 visible. We can adjust the range of each axis by computing the minimum
 and maximum values as we add events.
 
-
+```java
                 ArrayList<Double> xValues = new ArrayList<Double>();
                 ArrayList<Double> yValues = new ArrayList<Double>();
                 private double maxY = -Double.MAX_VALUE;
@@ -314,6 +322,7 @@ and maximum values as we add events.
                         }
                     });
                 }
+```
 
 #### Formatting the Time Stamps
 
@@ -323,6 +332,7 @@ TmfTimestampFormat to make it consistent with the other TMF views. We
 also need to handle the **TmfTimestampFormatUpdateSignal** to make sure
 that the time stamps update when the preferences change.
 
+```java
         @Override
         public void createPartControl(Composite parent) {
             ...
@@ -346,11 +356,13 @@ that the time stamps update when the preferences change.
             chart.getAxisSet().getXAxis(0).getTick().setFormat(new TmfChartTimeStampFormat());
             chart.redraw();
         }
+```
 
 We also need to populate the view when a trace is already selected and
 the view is opened. We can reuse the same code by having the view send
 the **TmfTraceSelectedSignal** to itself.
 
+```java
         @Override
         public void createPartControl(Composite parent) {
             ...
@@ -360,6 +372,7 @@ the **TmfTraceSelectedSignal** to itself.
                 traceSelected(new TmfTraceSelectedSignal(this, trace));
             }
         }
+```
 
 The view is now ready but we need a proper trace to test it. For this
 example, a trace was generated using LTTng-UST so that it would produce
@@ -383,6 +396,7 @@ button in its toolbar.
 It is the view's responsibility to take the proper actions when the view
 is pinned.
 
+```java
         @Override
         public synchronized void setPinned(ITmfTrace trace) {
             if (trace != null) {
@@ -391,6 +405,7 @@ is pinned.
                /* unpinned code */
             }
         }
+```
 
 ## TMF Built-in Views and Viewers
 

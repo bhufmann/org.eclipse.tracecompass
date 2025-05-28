@@ -42,9 +42,7 @@ that is present directly in the event. For example, the timestamp of an
 event, a field of an LTTng event, or the "payload" that is on the same
 line of a text trace entry. But it could also be the result of an
 indirect operation, for example a state system query at the timestamp of
-the given event (see the section
-<a href="#Generic_State_System" class="wikilink"
-title="#Generic State System">#Generic State System</a>).
+the given event (see the section [Generic State System](./Generic-State-System.md)
 
 All aspects should implement the **ITmfEventAspect** interface. The
 important method in there is *resolve(ITmfEvent)*, which tells this
@@ -104,7 +102,7 @@ configuring the editor to use for displaying the events. If omitted, the
 To configure an editor, first add the **defaultEditor** attribute to the
 trace type in the extension definition. This can be done by selecting
 the trace type in the plug-in manifest editor. Then click the right
-mouse button and select **New -\> defaultEditor** in the context
+mouse button and select **New -> defaultEditor** in the context
 sensitive menu. Then select the newly added attribute. Now you can
 specify the editor id to use on the right side of the manifest editor.
 For example, this attribute could be used to implement an extension of
@@ -144,7 +142,7 @@ omitted, the current perspective will be used.
 To configure an associated perspective, first add the **perspective**
 element to the trace type in the extension definition. This can be done
 by selecting the trace type in the plug-in manifest editor. Then click
-the right mouse button and select **New -\> perspective** in the context
+the right mouse button and select **New -> perspective** in the context
 sensitive menu. Then select the newly added element and select the *id*
 text field on the right side of the manifest editor. Enter the
 associated perspective id, which can be found in the
@@ -357,7 +355,7 @@ will be stored.
 1.  (Optional) To also add UI-specific properties to your trace type,
     use the **org.eclipse.linuxtools.tmf.ui.tracetypeui** extension. To
     do that, **right click** on the extension then in the context menu,
-    go to **New \>**, **type**.
+    go to **New ->**, **type**.
 
 The **tracetype** here is the **id** of the
 *org.eclipse.linuxtools.tmf.core.tracetype* mentioned above.

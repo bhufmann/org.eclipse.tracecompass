@@ -1,3 +1,12 @@
+<!--TOC-->
+
+- [XML schema extension](#xml-schema-extension)
+  - [Extending the schema](#extending-the-schema)
+  - [Parsing the schema](#parsing-the-schema)
+  - [Adding the extension point](#adding-the-extension-point)
+
+<!--TOC-->
+
 # XML schema extension
 
 Data-driven XML analyses add a lot of possibilities to enhance Trace

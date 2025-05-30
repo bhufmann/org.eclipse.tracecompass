@@ -1,3 +1,9 @@
+<!--TOC-->
+
+- [Introduction](#introduction)
+
+<!--TOC-->
+
 # Introduction
 
 The purpose of **Trace Compass** is to facilitate the integration of

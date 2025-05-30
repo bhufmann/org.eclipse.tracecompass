@@ -1,3 +1,9 @@
+<!--TOC-->
+
+- [Virtual Machine Analysis](#virtual-machine-analysis)
+
+<!--TOC-->
+
 # Virtual Machine Analysis
 
 *Note*: The Virtual Machine Analysis that was previously part of Trace

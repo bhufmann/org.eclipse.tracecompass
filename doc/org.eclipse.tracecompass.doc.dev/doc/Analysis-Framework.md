@@ -1,3 +1,25 @@
+<!--TOC-->
+
+- [Analysis Framework](#analysis-framework)
+  - [Creating a new module](#creating-a-new-module)
+    - [Example](#example)
+    - [Available base analysis classes and interfaces](#available-base-analysis-classes-and-interfaces)
+    - [How it works](#how-it-works)
+  - [Telling TMF about the analysis module](#telling-tmf-about-the-analysis-module)
+  - [Attaching outputs and views to the analysis module](#attaching-outputs-and-views-to-the-analysis-module)
+    - [Using the extension point to add outputs](#using-the-extension-point-to-add-outputs)
+  - [Providing help for the module](#providing-help-for-the-module)
+  - [Using analysis parameter providers](#using-analysis-parameter-providers)
+    - [Example parameter provider](#example-parameter-provider)
+    - [Register the parameter provider to the analysis](#register-the-parameter-provider-to-the-analysis)
+  - [Providing requirements to analyses](#providing-requirements-to-analyses)
+    - [Analysis requirement provider API](#analysis-requirement-provider-api)
+    - [Requirement values](#requirement-values)
+    - [Example of providing requirements](#example-of-providing-requirements)
+  - [TODO](#todo)
+
+<!--TOC-->
+
 # Analysis Framework
 
 Analysis modules are useful to tell the user exactly what can be done

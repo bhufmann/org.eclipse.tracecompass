@@ -1,3 +1,11 @@
+<!--TOC-->
+
+- [OS Execution Graph Extension](#os-execution-graph-extension)
+  - [Write the graph extension](#write-the-graph-extension)
+  - [Adding the extension point](#adding-the-extension-point)
+
+<!--TOC-->
+
 # OS Execution Graph Extension
 
 The execution graph is an analysis of some *worker* status and the

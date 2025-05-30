@@ -1,3 +1,11 @@
+<!--TOC-->
+
+- [Markers](#markers)
+  - [Trace-specific markers](#trace-specific-markers)
+  - [View-specific markers](#view-specific-markers)
+
+<!--TOC-->
+
 # Markers
 
 Markers are annotations that are defined with a time range, a color, a

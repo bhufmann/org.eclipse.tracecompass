@@ -1,3 +1,36 @@
+<!--TOC-->
+
+- [UML2 Sequence Diagram Framework](#uml2-sequence-diagram-framework)
+  - [TMF UML2 Sequence Diagram Extensions](#tmf-uml2-sequence-diagram-extensions)
+  - [Management of the Extension Point](#management-of-the-extension-point)
+  - [Sequence Diagram View](#sequence-diagram-view)
+    - [Supported Widgets](#supported-widgets)
+    - [Zooming](#zooming)
+    - [Printing](#printing)
+    - [Key Bindings](#key-bindings)
+    - [Preferences](#preferences)
+    - [Callback hooks](#callback-hooks)
+  - [Tutorial](#tutorial)
+    - [Prerequisites](#prerequisites)
+    - [Creating an Eclipse UI Plug-in](#creating-an-eclipse-ui-plug-in)
+    - [Creating a Sequence Diagram View](#creating-a-sequence-diagram-view)
+    - [Defining the uml2SDLoader Extension](#defining-the-uml2sdloader-extension)
+    - [Implementing the Loader Class](#implementing-the-loader-class)
+    - [Adding time information](#adding-time-information)
+    - [Printing a Sequence Diagram](#printing-a-sequence-diagram)
+    - [Using one Sequence Diagram View with Multiple Loaders](#using-one-sequence-diagram-view-with-multiple-loaders)
+    - [Downloading the Tutorial](#downloading-the-tutorial)
+  - [Integration of Tracing and Monitoring Framework with Sequence Diagram Framework](#integration-of-tracing-and-monitoring-framework-with-sequence-diagram-framework)
+    - [Reference Implementation](#reference-implementation)
+    - [Used Sequence Diagram Features](#used-sequence-diagram-features)
+    - [Used TMF Features](#used-tmf-features)
+    - [Supported Traces](#supported-traces)
+    - [Trace Format](#trace-format)
+    - [How to use the Reference Implementation](#how-to-use-the-reference-implementation)
+    - [Extending the Reference Loader](#extending-the-reference-loader)
+
+<!--TOC-->
+
 # UML2 Sequence Diagram Framework
 
 The purpose of the UML2 Sequence Diagram Framework of TMF is to provide

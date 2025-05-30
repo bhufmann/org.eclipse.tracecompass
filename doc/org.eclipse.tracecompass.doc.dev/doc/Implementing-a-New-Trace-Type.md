@@ -1,3 +1,27 @@
+<!--TOC-->
+
+- [Implementing a New Trace Type](#implementing-a-new-trace-type)
+  - [Event Aspects](#event-aspects)
+    - [Base and custom aspects](#base-and-custom-aspects)
+    - [Creating event aspects programmatically](#creating-event-aspects-programmatically)
+  - [Optional Trace Type Attributes](#optional-trace-type-attributes)
+    - [Default Editor](#default-editor)
+    - [Events Table Type](#events-table-type)
+    - [Perspective](#perspective)
+  - [Other Considerations](#other-considerations)
+    - [Collapsing of repetitive events](#collapsing-of-repetitive-events)
+  - [Best Practices](#best-practices)
+  - [An Example: Nexus-lite parser](#an-example-nexus-lite-parser)
+    - [Description of the file](#description-of-the-file)
+    - [NexusLite Plug-in](#nexuslite-plug-in)
+    - [Trace Event](#trace-event)
+    - [Trace Reader](#trace-reader)
+    - [Trace Context](#trace-context)
+    - [Trace Location](#trace-location)
+    - [The *org.eclipse.linuxtools.tmf.core.tracetype* and *org.eclipse.linuxtools.tmf.ui.tracetypeui* plug-in extension points](#the-orgeclipselinuxtoolstmfcoretracetype-and-orgeclipselinuxtoolstmfuitracetypeui-plug-in-extension-points)
+
+<!--TOC-->
+
 # Implementing a New Trace Type
 
 The framework can easily be extended to support more trace types. To

@@ -1,3 +1,23 @@
+<!--TOC-->
+
+- [TMF Remote API](#tmf-remote-api)
+  - [Prerequisites](#prerequisites)
+  - [TmfRemoteConnectionFactory](#tmfremoteconnectionfactory)
+    - [Accessing the remote services manager (OSGI service)](#accessing-the-remote-services-manager-osgi-service)
+    - [Obtaining a IRemoteConnection](#obtaining-a-iremoteconnection)
+    - [Creating an IRemoteConnection instance](#creating-an-iremoteconnection-instance)
+    - [Providing a connection factory](#providing-a-connection-factory)
+  - [RemoteSystemProxy](#remotesystemproxy)
+    - [Creating a RemoteSystemProxy](#creating-a-remotesystemproxy)
+    - [Opening the remote connection](#opening-the-remote-connection)
+    - [Closing the remote connection](#closing-the-remote-connection)
+    - [Disposing the remote connection](#disposing-the-remote-connection)
+    - [Checking the connection state](#checking-the-connection-state)
+    - [Retrieving the IRemoteConnection instance](#retrieving-the-iremoteconnection-instance)
+    - [Obtaining a command shell](#obtaining-a-command-shell)
+
+<!--TOC-->
+
 # TMF Remote API
 
 The TMF remote API is based on the remote services implementation of the

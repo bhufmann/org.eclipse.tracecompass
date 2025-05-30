@@ -1,3 +1,21 @@
+<!--TOC-->
+
+- [Event matching and trace synchronization](#event-matching-and-trace-synchronization)
+  - [Event matching interfaces](#event-matching-interfaces)
+  - [Implementation details and how to extend it](#implementation-details-and-how-to-extend-it)
+    - [ITmfEventMatching interface and derived classes](#itmfeventmatching-interface-and-derived-classes)
+    - [ITmfMatchEventDefinition interface and its derived classes](#itmfmatcheventdefinition-interface-and-its-derived-classes)
+    - [IMatchProcessingUnit interface and derived classes](#imatchprocessingunit-interface-and-derived-classes)
+  - [Code examples](#code-examples)
+    - [Using network packets matching in an analysis](#using-network-packets-matching-in-an-analysis)
+    - [Match events from UST traces](#match-events-from-ust-traces)
+  - [Trace synchronization](#trace-synchronization)
+    - [Synchronization algorithm](#synchronization-algorithm)
+    - [Timestamp transforms](#timestamp-transforms)
+  - [Todo](#todo)
+
+<!--TOC-->
+
 # Event matching and trace synchronization
 
 Event matching consists in taking an event from a trace and linking it

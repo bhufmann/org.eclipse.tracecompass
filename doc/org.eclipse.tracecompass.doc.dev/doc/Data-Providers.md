@@ -1,3 +1,20 @@
+<!--TOC-->
+
+- [Data Providers](#data-providers)
+  - [Data provider types](#data-provider-types)
+    - [XY](#xy)
+    - [Time Graph](#time-graph)
+  - [Data provider management](#data-provider-management)
+    - [Data Provider Factories](#data-provider-factories)
+    - [Extension point](#extension-point)
+    - [Experiments](#experiments)
+  - [Utilities](#utilities)
+  - [Views](#views)
+    - [XY views](#xy-views)
+    - [Time Graph Views](#time-graph-views)
+
+<!--TOC-->
+
 # Data Providers
 
 Starting in Trace Compass 3.3, the core and UI are being decoupled with

@@ -1,3 +1,16 @@
+<!--TOC-->
+
+- [Performance Tests](#performance-tests)
+  - [Add performance tests](#add-performance-tests)
+    - [Where](#where)
+    - [How](#how)
+    - [Run a performance test](#run-a-performance-test)
+  - [ABC of performance testing](#abc-of-performance-testing)
+    - [Determine what to test](#determine-what-to-test)
+    - [Metrics descriptions and considerations](#metrics-descriptions-and-considerations)
+
+<!--TOC-->
+
 # Performance Tests
 
 Performance testing allows to calculate some metrics (CPU time, Memory

@@ -1,3 +1,17 @@
+<!--TOC-->
+
+- [Network Tracing](#network-tracing)
+  - [Adding a protocol](#adding-a-protocol)
+    - [Architecture](#architecture)
+    - [UDP Packet Structure](#udp-packet-structure)
+    - [Creating the UDPPacket](#creating-the-udppacket)
+    - [Creating the UDPEndpoint](#creating-the-udpendpoint)
+    - [Registering the UDP protocol](#registering-the-udp-protocol)
+  - [Adding stream-based views](#adding-stream-based-views)
+  - [TODO](#todo)
+
+<!--TOC-->
+
 # Network Tracing
 
 ## Adding a protocol

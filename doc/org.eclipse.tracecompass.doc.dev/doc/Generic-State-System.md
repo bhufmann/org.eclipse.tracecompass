@@ -1,3 +1,39 @@
+<!--TOC-->
+
+- [Generic State System](#generic-state-system)
+  - [Introduction](#introduction)
+  - [High-level components](#high-level-components)
+  - [Definitions](#definitions)
+    - [Attribute](#attribute)
+    - [Attribute Tree](#attribute-tree)
+    - [Quark](#quark)
+    - [State value](#state-value)
+    - [State change](#state-change)
+    - [State interval](#state-interval)
+    - [State history](#state-history)
+    - [Construction phase](#construction-phase)
+    - [Queries](#queries)
+  - [Relevant interfaces/classes](#relevant-interfacesclasses)
+    - [Main classes in org.eclipse.tracecompass.tmf.core.statesystem](#main-classes-in-orgeclipsetracecompasstmfcorestatesystem)
+    - [Other relevant interfaces](#other-relevant-interfaces)
+    - [Exceptions](#exceptions)
+  - [Comparison of state system backends](#comparison-of-state-system-backends)
+    - [Full history](#full-history)
+    - [Null history](#null-history)
+    - [In-memory history](#in-memory-history)
+    - [Partial history](#partial-history)
+  - [State System Operations](#state-system-operations)
+    - [queryRangeMax()](#queryrangemax)
+    - [queryRangeMin()](#queryrangemin)
+    - [queryRangeAverage()](#queryrangeaverage)
+  - [Code example](#code-example)
+    - [State Provider](#state-provider)
+    - [Analysis module definition](#analysis-module-definition)
+  - [Mipmap feature](#mipmap-feature)
+    - [AbstractTmfMipmapStateProvider](#abstracttmfmipmapstateprovider)
+
+<!--TOC-->
+
 # Generic State System
 
 ## Introduction

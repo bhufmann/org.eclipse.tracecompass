@@ -1,3 +1,24 @@
+<!--TOC-->
+
+- [CTF Parser](#ctf-parser)
+  - [CTF Format](#ctf-format)
+    - [Metadata](#metadata)
+    - [Event Streams](#event-streams)
+  - [Reading a trace](#reading-a-trace)
+  - [Seeking in a trace](#seeking-in-a-trace)
+  - [Interfacing to TMF](#interfacing-to-tmf)
+    - [CtfLocation](#ctflocation)
+    - [CtfTmfTrace](#ctftmftrace)
+    - [CtfIterator](#ctfiterator)
+    - [CtfIteratorManager](#ctfiteratormanager)
+    - [CtfTmfContext](#ctftmfcontext)
+    - [CtfTmfTimestamp](#ctftmftimestamp)
+    - [CtfTmfEvent](#ctftmfevent)
+    - [Other](#other)
+    - [Limitations](#limitations)
+
+<!--TOC-->
+
 # CTF Parser
 
 ## CTF Format

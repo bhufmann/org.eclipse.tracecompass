@@ -1,3 +1,17 @@
+<!--TOC-->
+
+- [JUL Logging](#jul-logging)
+  - [Use a static logger for each class](#use-a-static-logger-for-each-class)
+  - [Use a message supplier](#use-a-message-supplier)
+  - [Choose the appropriate log level](#choose-the-appropriate-log-level)
+  - [Log message format](#log-message-format)
+  - [Logging to populate Callstacks and Callgraph analyses](#logging-to-populate-callstacks-and-callgraph-analyses)
+  - [Logging to track Object life cycles](#logging-to-track-object-life-cycles)
+  - [Logging to track Asynchronous operations](#logging-to-track-asynchronous-operations)
+  - [Analyzing Trace Compass Logs](#analyzing-trace-compass-logs)
+
+<!--TOC-->
+
 # JUL Logging
 
 Logging can be quite useful to debug a class, see its interactions with

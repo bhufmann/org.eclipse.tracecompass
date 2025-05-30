@@ -1,3 +1,35 @@
+<!--TOC-->
+
+- [Component Interaction](#component-interaction)
+  - [Sending Signals](#sending-signals)
+  - [Receiving Signals](#receiving-signals)
+  - [Signal Throttling](#signal-throttling)
+  - [Ignoring inbound/outbound signals](#ignoring-inboundoutbound-signals)
+  - [Signal Reference](#signal-reference)
+    - [TmfStartSynchSignal](#tmfstartsynchsignal)
+    - [TmfEndSynchSignal](#tmfendsynchsignal)
+    - [TmfTraceOpenedSignal](#tmftraceopenedsignal)
+    - [TmfTraceSelectedSignal](#tmftraceselectedsignal)
+    - [TmfTraceClosedSignal](#tmftraceclosedsignal)
+    - [TmfTraceRangeUpdatedSignal](#tmftracerangeupdatedsignal)
+    - [TmfTraceUpdatedSignal](#tmftraceupdatedsignal)
+    - [TmfSelectionRangeUpdatedSignal](#tmfselectionrangeupdatedsignal)
+    - [TmfWindowRangeUpdatedSignal](#tmfwindowrangeupdatedsignal)
+    - [TmfEventFilterAppliedSignal](#tmfeventfilterappliedsignal)
+    - [TmfEventSearchAppliedSignal](#tmfeventsearchappliedsignal)
+    - [TmfTimestampFormatUpdateSignal](#tmftimestampformatupdatesignal)
+    - [TmfStatsUpdatedSignal](#tmfstatsupdatedsignal)
+    - [TmfPacketStreamSelected](#tmfpacketstreamselected)
+    - [TmfStartAnalysisSignal](#tmfstartanalysissignal)
+    - [TmfCpuSelectedSignal](#tmfcpuselectedsignal)
+    - [TmfThreadSelectedSignal](#tmfthreadselectedsignal)
+    - [TmfSymbolProviderUpdatedSignal](#tmfsymbolproviderupdatedsignal)
+    - [TmfTraceSynchronizedSignal](#tmftracesynchronizedsignal)
+    - [TmfMarkerEventSourceUpdatedSignal](#tmfmarkereventsourceupdatedsignal)
+  - [Debugging](#debugging)
+
+<!--TOC-->
+
 # Component Interaction
 
 TMF provides a mechanism for different components to interact with each

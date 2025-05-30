@@ -1,3 +1,22 @@
+<!--TOC-->
+
+- [View Tutorial](#view-tutorial)
+  - [Prerequisites](#prerequisites)
+  - [Creating an Eclipse UI Plug-in](#creating-an-eclipse-ui-plug-in)
+  - [Creating a View](#creating-a-view)
+  - [Implementing a view](#implementing-a-view)
+    - [Adding an Empty Chart](#adding-an-empty-chart)
+    - [Signal Handling](#signal-handling)
+    - [Requesting Data](#requesting-data)
+    - [Transferring Data to the Chart](#transferring-data-to-the-chart)
+    - [Adjusting the Range](#adjusting-the-range)
+    - [Formatting the Time Stamps](#formatting-the-time-stamps)
+    - [Pin feature](#pin-feature)
+  - [TMF Built-in Views and Viewers](#tmf-built-in-views-and-viewers)
+  - [Timing Analysis Views and Viewers](#timing-analysis-views-and-viewers)
+
+<!--TOC-->
+
 # View Tutorial
 
 This tutorial describes how to create a simple view using the TMF

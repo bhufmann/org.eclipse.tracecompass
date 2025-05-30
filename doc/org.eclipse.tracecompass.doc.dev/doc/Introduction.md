@@ -10,3 +10,7 @@ framework. It should help developers trying to add new capabilities
 (support for new trace type, new analysis or views, etc.) to the
 framework. End-users, using the RCP for example, should not have to
 worry about the concepts explained here.
+
+##Trace Compass Server
+
+For development `for Trace Compass Trace Server` see the [Trace Server Developer Guide](https://github.com/eclipse-tracecompass/org.eclipse.tracecompass/blob/master/doc/trace-server/trace-server-dev-guide.md).

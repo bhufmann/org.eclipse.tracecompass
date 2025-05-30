@@ -7,7 +7,7 @@ model and analyze the system's workflow. Here are some guidelines to use
 logging efficiently in Trace Compass. See the User Documentation for
 instructions on how to enable logging and obtain traces.
 
-### Use a static logger for each class
+## Use a static logger for each class
 
 Each class should define and use their own static logger like this:
 
@@ -41,7 +41,7 @@ logging happen.
 
 Both methods have their advantages and there is no clear good answer.
 
-### Use a message supplier
+## Use a message supplier
 
 A logging statement, to be meaningful, will usually log a string that
 contains data from the context and will thus do string concatenation.
@@ -54,7 +54,7 @@ used for all logging statements
     LOGGER.info(() -> "[Component:Action] param1=" + myParam1 + ", param2=" + myParam2);
 ```
 
-### Choose the appropriate log level
+## Choose the appropriate log level
 
 The available log levels for JUL are SEVERE, WARNING, INFO, CONFIG,
 FINE, FINER, FINEST. The default level when not specified is INFO.
@@ -73,7 +73,7 @@ FINE, FINER, FINEST. The default level when not specified is INFO.
   purpose in mind, like debugging a component or getting data on caches
   for examples.
 
-### Log message format
+## Log message format
 
 JUL logging will produce trace data and unless one wants to visually
 parse a trace one event at a time, it will typically be used with an
@@ -87,7 +87,7 @@ for JUL statements that use the following format
     [EventName:MayContainSemiColon] paramName1=paramValue1, paramName2=paramValue2
 ```
 
-### Logging to populate Callstacks and Callgraph analyses
+## Logging to populate Callstacks and Callgraph analyses
 
 In order to log data in a way that the call stack analysis has enough
 information to display, use the TraceCompassLogUtils#ScopeLog. It is an
@@ -107,14 +107,14 @@ The resulting trace will have the following fields
       INFO: {"ts":"12366,"ph":"E","tid":1}
 ```
 
-### Logging to track Object life cycles
+## Logging to track Object life cycles
 
 In order to log data so that a lifecycle of a given object can be
 followed, use TraceCompassLogUtils#traceObjectCreation and
 TraceCompassLogUtils#traceObjectDestruction. The objects life cycles
 will be tracked and displayed.
 
-### Logging to track Asynchronous operations
+## Logging to track Asynchronous operations
 
 In order to log data so that a lifecycle of a given object can be
 followed, use TraceCompassLogUtils#traceObjectCreation and

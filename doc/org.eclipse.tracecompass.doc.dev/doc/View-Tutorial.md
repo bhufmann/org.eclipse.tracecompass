@@ -17,11 +17,9 @@ This tutorial will cover concepts like:
 
 **Note**: Trace Compass 0.1.0 provides base implementations for
 generating SWTChart viewers and views. For more details please refer to
-chapter <a href="#TMF_Built-in_Views_and_Viewers" class="wikilink"
-title="#TMF Built-in Views and Viewers">#TMF Built-in Views and
-Viewers</a>.
+[TMF Built-in Views and Viewers](#tmf-built-in-views-and-viewers).
 
-### Prerequisites
+## Prerequisites
 
 The tutorial is based on Eclipse 4.4 (Eclipse Luna), Trace Compass 0.1.0
 and SWTChart 0.7.0. If you are using TMF from the source repository,
@@ -30,16 +28,16 @@ org.eclipse.tracecompass.target). You can also install it manually by
 using the Orbit update site.
 <http://download.eclipse.org/tools/orbit/downloads/>
 
-### Creating an Eclipse UI Plug-in
+## Creating an Eclipse UI Plug-in
 
 To create a new project with name org.eclipse.tracecompass.tmf.sample.ui
-select **File -\> New -\> Project -\> Plug-in Development -\> Plug-in
+select **File -> New -> Project -> Plug-in Development -> Plug-in
 Project**.  
 ![](images/Screenshot-NewPlug-inProject1.png "images/Screenshot-NewPlug-inProject1.png")  
 ![](images/Screenshot-NewPlug-inProject2.png "images/Screenshot-NewPlug-inProject2.png")  
 ![](images/Screenshot-NewPlug-inProject3.png "images/Screenshot-NewPlug-inProject3.png")  
 
-### Creating a View
+## Creating a View
 
 To open the plug-in manifest, double-click on the MANIFEST.MF file.  
 ![](images/SelectManifest.png "images/SelectManifest.png")  
@@ -97,13 +95,13 @@ following code is obtained:
 
 This creates an empty view, however the basic structure is now is place.
 
-### Implementing a view
+## Implementing a view
 
 We will start by adding a empty chart then it will need to be populated
 with the trace data. Finally, we will make the chart more visually
 pleasing by adjusting the range and formating the time stamps.
 
-#### Adding an Empty Chart
+### Adding an Empty Chart
 
 First, we can add an empty chart to the view and initialize some of its
 components.
@@ -135,6 +133,7 @@ components.
         public void setFocus() {
             chart.setFocus();
         }
+```
 
 The view is prepared. Run the Example. To launch the an Eclipse
 Application select the *Overview* tab and click on **Launch an Eclipse
@@ -145,20 +144,22 @@ A new Eclipse application window will show. In the new window go to
 ![](images/ShowViewOther.png "images/ShowViewOther.png")  
 You should now see a view containing an empty chart  
 ![](images/EmptySampleView.png "images/EmptySampleView.png")  
-```
 
-#### Signal Handling
+### Signal Handling
 
 We would like to populate the view when a trace is selected. To achieve
 this, we can use a signal hander which is specified with the
+
 **@TmfSignalHandler** annotation.
 
+```java
         @TmfSignalHandler
         public void traceSelected(final TmfTraceSelectedSignal signal) {
 
         }
+```
 
-#### Requesting Data
+### Requesting Data
 
 Then we need to actually gather data from the trace. This is done
 asynchronously using a *TmfEventRequest*
@@ -201,7 +202,7 @@ asynchronously using a *TmfEventRequest*
         }
 ```
 
-#### Transferring Data to the Chart
+### Transferring Data to the Chart
 
 The chart expects an array of doubles for both the X and Y axis values.
 To provide that, we can accumulate each event's time and value in their
@@ -263,7 +264,7 @@ processed.
             };
 ```
 
-#### Adjusting the Range
+### Adjusting the Range
 
 The chart now contains values but they might be out of range and not
 visible. We can adjust the range of each axis by computing the minimum
@@ -324,7 +325,7 @@ and maximum values as we add events.
                 }
 ```
 
-#### Formatting the Time Stamps
+### Formatting the Time Stamps
 
 To display the time stamps on the X axis nicely, we need to specify a
 format or else the time stamps will be displayed as *long*. We use
@@ -383,7 +384,7 @@ library. We made use of signals and requests to populate the view at the
 appropriate time and we formated the time stamps nicely. We also made
 sure that the time stamp format is updated when the preferences change.
 
-#### Pin feature
+### Pin feature
 
 The pin feature allows pinning a view to a specific trace. A pinned view
 will not synchronize on active trace changes. How the view implements
